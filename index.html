@@ -257,6 +257,7 @@ body{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,-apple
           <button class="btn-gray" id="collapseAll">全部折叠</button>
           <button class="btn-green" id="applyAllAsin">一键应用全部ASIN</button>
           <button class="btn-blue" id="importAsinBtn">📥 导入ASIN表格</button>
+          <button class="btn-blue" id="dlTplBtn">📤 下载输入模板</button>
           <input type="file" id="importAsinInput" accept=".xlsx,.xls,.csv" style="display:none">
           <div style="flex-grow:1"></div>
           <button class="btn-orange" id="multiGenZip">生成多ASIN合并ZIP</button>
@@ -1123,6 +1124,27 @@ document.getElementById('applyAllAsin').onclick = ()=>{
 
 
 // ========== 导入ASIN表格（Excel / CSV）==========
+
+// ========== 下载输入模板（Excel示例） ==========
+document.getElementById('dlTplBtn').onclick = ()=>{
+  try{
+    const head = [['SKU/文件夹名', 'ASIN']];
+    const rows = [
+      ['SKU-001', 'B0XXXXXXXX1'],
+      ['SKU-002', 'B0XXXXXXXX2'],
+      ['SKU-003', 'B0XXXXXXXX3']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(head.concat(rows));
+    ws['!cols'] = [{wch:20},{wch:18}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'ASIN导入模板');
+    XLSX.writeFile(wb, 'ASIN导入模板.xlsx');
+    mlog('📤 已下载输入模板，请按「SKU/文件夹名」和「ASIN」两列填写后导入');
+  }catch(err){
+    mlog('❌ 下载模板失败：'+err.message);
+  }
+}
+
 document.getElementById('importAsinBtn').onclick = ()=>{
   document.getElementById('importAsinInput').click();
 }
