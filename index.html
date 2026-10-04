@@ -3484,7 +3484,37 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <tbody id="coupon-tbody"></tbody>
       </table>
     </div>
+  <!-- ===== 优惠券：批注检查 ===== -->
+  <section class="step-card" id="step3">
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <h2>批注检查（剔除报错 ASIN）</h2>
+      <span class="hint">导入上传后带批注的 SPC 模板 · 汇总报错 ASIN · 剔除后重新复制</span>
+    </div>
+    <div class="step-body">
+      <div class="field field-full">
+        <label>导入带批注的模板文件 <span class="unit">亚马逊回填的 SPC_Template（批注里含校验报错），xlsx</span></label>
+        <input type="file" id="file-comment" accept=".xlsx">
+      </div>
+      <div id="cmt-status" style="display:none;margin-top:10px;font-size:12.5px;color:var(--ink-2);line-height:1.8"></div>
+      <div id="cmt-wrap" style="display:none;margin-top:12px">
+        <div class="table-scroll">
+          <table class="coupon-table" id="cmt-table">
+            <thead><tr><th style="width:52px">#</th><th>ASIN</th><th>错误分类</th><th style="min-width:220px">报错原因</th></tr></thead>
+            <tbody id="cmt-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="action-bar" id="cmt-actions" style="display:none;margin-top:14px;padding:14px 16px">
+        <button class="btn btn-primary btn-sm" id="btn-copy-clean">复制剔除报错后的上传模板行</button>
+        <button class="btn btn-sm" id="btn-copy-err">复制报错ASIN上传模板行</button>
+        <button class="btn btn-sm" id="btn-copy-err-list">复制报错ASIN列表</button>
+        <button class="btn btn-sm" id="btn-clear-comment" style="margin-left:auto">清空批注检查</button>
+        <span class="gen-note" id="cmt-note">需先在上方「生成券清单」后再剔除；报错ASIN行参数沿用当前券的折扣/日期等。</span>
+      </div>
+    </div>
   </section>
+</section>
 
   <!-- ===== 优惠券：规则速览 ===== -->
   <details class="rules">
@@ -3789,6 +3819,187 @@ $("#btn-dl-upload").addEventListener("click", () => {
 });
 /* ===== 初始化 ===== */
 // 日期默认为空：用户点「时长快捷选择」或手动填写
+
+
+/* ===== 批注检查：解析 SPC 模板批注（原生 zip + XML，不依赖外部库） ===== */
+let badAsins = [];
+let badAsinSet = new Set();
+
+function decUTF8(u8) { return new TextDecoder("utf-8").decode(u8); }
+async function readZipEntries(buf) {
+  const dv = new DataView(buf);
+  let eocd = -1;
+  for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 66000); i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error("不是有效的 xlsx 文件");
+  const cdCount = dv.getUint16(eocd + 10, true);
+  const cdOffset = dv.getUint32(eocd + 16, true);
+  const entries = {};
+  let p = cdOffset;
+  for (let n = 0; n < cdCount; n++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true);
+    const compSize = dv.getUint32(p + 20, true);
+    const uncompSize = dv.getUint32(p + 24, true);
+    const nameLen = dv.getUint16(p + 28, true);
+    const extraLen = dv.getUint16(p + 30, true);
+    const commentLen = dv.getUint16(p + 32, true);
+    const localOff = dv.getUint32(p + 42, true);
+    const name = decUTF8(new Uint8Array(buf, p + 46, nameLen));
+    entries[name] = { method: method, compSize: compSize, uncompSize: uncompSize, localOff: localOff };
+    p += 46 + nameLen + extraLen + commentLen;
+  }
+  if (!Object.keys(entries).length) throw new Error("压缩包条目为空");
+  return entries;
+}
+async function unzipEntry(buf, e) {
+  const dv = new DataView(buf);
+  const p = e.localOff;
+  if (dv.getUint32(p, true) !== 0x04034b50) throw new Error("zip 条目损坏");
+  const nameLen = dv.getUint16(p + 26, true);
+  const extraLen = dv.getUint16(p + 28, true);
+  const dataStart = p + 30 + nameLen + extraLen;
+  const data = new Uint8Array(buf, dataStart, e.compSize);
+  if (e.method === 0) return data.slice(0, e.uncompSize);
+  if (e.method === 8) {
+    if (typeof DecompressionStream === "undefined") throw new Error("浏览器不支持解压，请用新版浏览器");
+    const out = await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer();
+    return new Uint8Array(out);
+  }
+  throw new Error("不支持的压缩方式 " + e.method);
+}
+async function readXlsxComments(buf) {
+  const entries = await readZipEntries(buf);
+  const out = [];
+  for (const name in entries) {
+    if (!/^xl\/comments(\/comment)?\d*\.xml$/i.test(name)) continue;
+    const xml = decUTF8(await unzipEntry(buf, entries[name]));
+    const doc = new DOMParser().parseFromString(xml, "application/xml");
+    doc.querySelectorAll("comment").forEach(c => {
+      const ref = c.getAttribute("ref") || "";
+      const txt = Array.from(c.querySelectorAll("t")).map(t => t.textContent || "").join("");
+      if (ref && txt) out.push({ ref: ref, text: txt });
+    });
+  }
+  return out;
+}
+function catOf(reason) {
+  if (/提高优惠券折扣|净价格|降价|折扣/.test(reason)) return "折扣不足";
+  if (/评分|评论/.test(reason)) return "商品评分";
+  if (/参考价/.test(reason)) return "无参考价";
+  if (/不安全|反感|推广方式/.test(reason)) return "推广不安全";
+  return "其他";
+}
+function catBadge(cat) {
+  const color = (cat === "折扣不足" || cat === "推广不安全") ? "#d93026" : cat === "商品评分" ? "#2563eb" : cat === "无参考价" ? "#b7791f" : "#86909c";
+  return '<span style="display:inline-block;padding:1px 9px;border-radius:10px;font-size:11px;font-weight:600;background:' + color + '1a;color:' + color + '">' + esc(cat) + "</span>";
+}
+$("#file-comment").addEventListener("change", async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    const buf = await f.arrayBuffer();
+    const comments = await readXlsxComments(buf);
+    const list = [];
+    comments.forEach(cm => {
+      const t = cm.text || "";
+      const re = /B0[A-Z0-9]{8}/g;
+      const ms = []; let m;
+      while ((m = re.exec(t)) !== null) ms.push({ asin: m[0], idx: m.index });
+      for (let i = 0; i < ms.length; i++) {
+        const start = ms[i].idx + ms[i].asin.length;
+        const end = i + 1 < ms.length ? ms[i + 1].idx : t.length;
+        const seg = t.slice(start, end);
+        const lines = seg.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        const reason = lines[0] || "";
+        list.push({ asin: ms[i].asin, cat: catOf(reason), reason: reason, detail: lines.join("；") });
+      }
+    });
+    const seen = new Set();
+    badAsins = list.filter(x => { if (seen.has(x.asin)) return false; seen.add(x.asin); return true; });
+    badAsinSet = new Set(badAsins.map(x => x.asin));
+    renderCommentResult();
+  } catch (err) {
+    toast("解析失败：" + err.message);
+  }
+});
+function renderCommentResult() {
+  const st = $("#cmt-status");
+  st.style.display = "block";
+  if (!badAsins.length) {
+    st.innerHTML = "未在批注中发现报错 ASIN（文件无批注，或批注格式不同）。";
+    $("#cmt-wrap").style.display = "none";
+    $("#cmt-actions").style.display = "none";
+    return;
+  }
+  const counts = {};
+  badAsins.forEach(x => counts[x.cat] = (counts[x.cat] || 0) + 1);
+  const catTxt = Object.entries(counts).map(([k, v]) => "<b>" + v + "</b> " + k).join(" · ");
+  st.innerHTML = "检测到 <b style='color:var(--warn)'>" + badAsins.length + "</b> 个报错 ASIN：<span style='margin-left:8px'>" + catTxt + "</span><br>「折扣不足」可提高折扣后重新上传；「商品评分」低于 3 达标后自动重启用；「推广不安全」无法加入优惠券；「无参考价」属价格数据问题。";
+  $("#cmt-wrap").style.display = "block";
+  $("#cmt-actions").style.display = "flex";
+  const tb = $("#cmt-tbody");
+  tb.innerHTML = "";
+  badAsins.forEach((x, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td>" + (i + 1) + "</td>" +
+      '<td style="font-family:Consolas,monospace">' + esc(x.asin) + "</td>" +
+      "<td>" + catBadge(x.cat) + "</td>" +
+      '<td style="text-align:left;font-size:11.5px;line-height:1.5" title="' + esc(x.detail) + '">' + esc(x.reason) + "</td>";
+    tb.appendChild(tr);
+  });
+}
+/* 复制剔除报错后的上传模板行：逐行过滤 ASIN */
+$("#btn-copy-clean").addEventListener("click", () => {
+  if (!window._rows || !window._rows.length) { toast("请先在步骤 2「生成券清单」"); $("#step2").scrollIntoView({ behavior: "smooth" }); return; }
+  if (!badAsinSet.size) { toast("请先导入带批注的模板文件"); return; }
+  const lines = window._rows.map(r => Object.assign({}, r, { asins: r.asins.filter(a => !badAsinSet.has(a)) }));
+  const low = lines.filter(r => r.asins.length < 15).map(r => r.no);
+  const tsv = rowsToUploadTsv(lines);
+  copyText(tsv);
+  toast("已复制剔除报错后的上传模板行 " + lines.length + " 行" + (low.length ? "；券 " + low.join("、") + " 剔除后不足 15 个 ASIN，需补充" : ""));
+});
+/* 复制报错 ASIN 上传模板行：参数沿用当前生成的第一张券 */
+$("#btn-copy-err").addEventListener("click", () => {
+  if (!badAsins.length) { toast("请先导入带批注的模板文件"); return; }
+  const base = (window._rows && window._rows[0]) ? window._rows[0] : null;
+  const pub = getPub();
+  const r = {
+    asins: badAsins.map(x => x.asin),
+    type: base ? base.type : pub.type,
+    pct: base ? base.pct : (pub.type === "折扣" ? 10 : NaN),
+    amt: base ? base.amt : (pub.type === "减免金额 ($)" ? 5 : NaN),
+    name: cleanName((base ? base.name : "券") + "报错"),
+    budget: base ? base.budget : 100,
+    start: base ? base.start : pub.start,
+    end: base ? base.end : pub.end,
+    limit: base ? base.limit : pub.limit,
+    kind: base ? base.kind : pub.kind,
+    buyer: base ? base.buyer : pub.buyer,
+    stack: base ? base.stack : pub.stack
+  };
+  copyText(rowsToUploadTsv([r]));
+  toast("已复制报错 ASIN 上传模板行（" + badAsins.length + " 个 ASIN，参数沿用当前券）");
+});
+/* 复制报错 ASIN 列表 */
+$("#btn-copy-err-list").addEventListener("click", () => {
+  if (!badAsins.length) { toast("请先导入带批注的模板文件"); return; }
+  copyText(badAsins.map(x => x.asin).join(";"));
+  toast("已复制 " + badAsins.length + " 个报错 ASIN（分号分隔）");
+});
+/* 清空批注检查 */
+$("#btn-clear-comment").addEventListener("click", () => {
+  badAsins = [];
+  badAsinSet = new Set();
+  $("#file-comment").value = "";
+  $("#cmt-status").style.display = "none";
+  $("#cmt-wrap").style.display = "none";
+  $("#cmt-actions").style.display = "none";
+  $("#cmt-tbody").innerHTML = "";
+  toast("已清空批注检查结果");
+});
+
 
 
 })();
