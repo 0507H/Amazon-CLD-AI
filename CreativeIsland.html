@@ -4055,19 +4055,29 @@ $("#btn-clear-comment").addEventListener("click", () => {
 </div>
 <div class="pf-f" style="margin-top:8px"><label>类目</label>
 <select id="pf_cat">
-<option value="服装和配饰" selected>服装和配饰</option>
+<option value="家居厨房" selected>家居厨房</option>
+<option value="服装和配饰">服装和配饰</option>
 <option value="珠宝首饰">珠宝首饰</option>
 <option value="母婴">母婴</option>
 <option value="美妆个护">美妆个护</option>
 <option value="电子产品配件">电子产品配件</option>
+<option value="电脑消费电子">电脑/消费电子</option>
 <option value="家具">家具</option>
 <option value="食品">食品</option>
 <option value="钟表">钟表</option>
 <option value="小型电器">小型电器</option>
-<option value="亚马逊设备配件">亚马逊设备配件</option>
-<option value="电脑">电脑/消费电子</option>
-<option value="汽车">汽车/工具</option>
+<option value="汽车工具">汽车/工具</option>
 <option value="宠物用品">宠物用品</option>
+<option value="运动户外">运动户外</option>
+<option value="花园庭院">花园庭院</option>
+<option value="玩具游戏">玩具游戏</option>
+<option value="办公用品">办公用品</option>
+<option value="工艺品装饰品">工艺品/装饰品</option>
+<option value="箱包行李">箱包/行李</option>
+<option value="健康家居">健康家居</option>
+<option value="工业科学">工业/科学</option>
+<option value="音乐乐器">音乐/乐器</option>
+<option value="图书音像">图书/音像</option>
 <option value="轮胎">轮胎</option>
 <option value="其他">其他（15%）</option>
 </select></div>
@@ -4146,16 +4156,25 @@ function commRate(c,p){
   if(c.includes('服装'))return p<=15?0.05:p<=20?0.1:0.17;
   if(c.includes('母婴')||c.includes('美妆'))return p<=10?0.08:0.15;
   if(c.includes('电子配件'))return p<=100?0.15:0.08;
+  if(c.includes('电脑')||c.includes('消费电子')||c.includes('电器')||c.includes('游戏机'))return 0.08;
   if(c.includes('家具'))return p<=200?0.15:0.1;
   if(c.includes('食品'))return p<=15?0.08:0.15;
   if(c.includes('钟表'))return p<=1500?0.16:0.03;
-  if(c.includes('小型电器'))return p<=300?0.15:0.08;
   if(c.includes('亚马逊设备'))return 0.45;
-  if(c.includes('电脑')||c.includes('消费电子')||c.includes('电器')||c.includes('游戏机'))return 0.08;
-  if(c.includes('汽车')||c.includes('商业')||c.includes('工具'))return 0.12;
+  if(c.includes('汽车')||c.includes('工具')||c.includes('商业'))return 0.12;
   if(c.includes('礼品卡'))return 0.2;
   if(c.includes('宠物'))return 0.15;
   if(c.includes('轮胎'))return 0.1;
+  if(c.includes('运动')||c.includes('户外')||c.includes('玩具'))return 0.15;
+  if(c.includes('花园')||c.includes('庭院'))return 0.15;
+  if(c.includes('办公'))return 0.15;
+  if(c.includes('工艺')||c.includes('装饰')||c.includes('礼品'))return 0.15;
+  if(c.includes('箱包')||c.includes('行李'))return 0.15;
+  if(c.includes('健康'))return 0.15;
+  if(c.includes('工业')||c.includes('科学'))return 0.12;
+  if(c.includes('音乐')||c.includes('乐器'))return 0.12;
+  if(c.includes('图书')||c.includes('音像'))return 0.15;
+  if(c.includes('家居')||c.includes('厨房'))return 0.15;
   return 0.15;
 }
 const vatR={US:0,UK:0.20,DE:0.19,CA:0};
@@ -4243,7 +4262,8 @@ function pfCalc(){
     return{bg:'#ffedd5',fg:'#9a3412'};
   }
   h+='<div style="font-size:13px;font-weight:700;color:#123a6d;margin-bottom:8px">利润对比（广告'+(customAd*100).toFixed(0)+'%）</div>';
-  const prices=[17.99,19.99,21.99,23.99,25.99,27.99,29.99,32.99,35.99];
+  const basePrice=Math.floor(p);
+  const prices=[basePrice-4+0.99,basePrice-2+0.99,basePrice+0.99,basePrice+2+0.99,basePrice+4+0.99,basePrice+6+0.99,basePrice+8+0.99,basePrice+10+0.99,basePrice+12+0.99].filter(function(v){return v>0;});
   const shipMethods=[['海运',shipRates.海运],['快船',shipRates.快船],['空派DHL',shipRates.DHL],['空派专线',shipRates.DHL*0.7]];
   h+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px">';
   h+='<tr style="background:#123a6d;color:#fff"><th style="padding:5px">售价</th>';
