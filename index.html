@@ -4011,8 +4011,13 @@ $("#btn-clear-comment").addEventListener("click", () => {
 
 <section class="view" id="viewProfit">
 <style>
-#viewProfit{padding:16px;background:#f5f7fa;min-height:calc(100vh - 60px)}
+#viewProfit{padding:0;background:#f5f7fa;min-height:calc(100vh - 60px)}
 #viewProfit *{box-sizing:border-box;margin:0;padding:0;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+#viewProfit .pf-topbar{background:linear-gradient(135deg,#0B1F3A,#123A6D);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px}
+#viewProfit .pf-topbar .pf-ic{width:36px;height:36px;border-radius:8px;background:#FF9900;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#0B1F3A}
+#viewProfit .pf-topbar h3{font-size:16px;font-weight:700}
+#viewProfit .pf-topbar p{font-size:11px;color:#C7D6EC;margin-top:1px}
+#viewProfit .pf-body{padding:16px}
 #viewProfit .pf-grid{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:stretch}
 #viewProfit .pf-card{background:#fff;border:1px solid #e5eaf2;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden}
 #viewProfit .pf-input{padding:0}
@@ -4033,6 +4038,11 @@ $("#btn-clear-comment").addEventListener("click", () => {
 #viewProfit .pf-out{padding:14px 16px}
 #viewProfit .pf-out h2{font-size:14px;color:#123a6d;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #ff9900}
 </style>
+<div class="pf-topbar">
+<div class="pf-ic">$</div>
+<div><h3>亚马逊利润测算 Pro</h3><p>本地运行 · 实时计算利润结构与关键指标</p></div>
+</div>
+<div class="pf-body">
 <div class="pf-grid">
 <div class="pf-card pf-input">
 <div class="pf-hdr"><h3>利润测算</h3><p>输入产品与运营数据，实时计算利润结构与关键指标</p></div>
@@ -4106,6 +4116,7 @@ $("#btn-clear-comment").addEventListener("click", () => {
 <div class="pf-card pf-out">
 <h2>利润测算结果</h2>
 <div id="pf_result"></div>
+</div>
 </div>
 </div>
 </section>
@@ -4231,7 +4242,7 @@ function pfCalc(){
     if(m2>=0.08)return{bg:'#fef9c3',fg:'#854d0e'};
     return{bg:'#ffedd5',fg:'#9a3412'};
   }
-  h+='<div style="font-size:13px;font-weight:700;color:#123a6d;margin-bottom:8px">售价×物流 利润对比（广告'+(customAd*100).toFixed(0)+'%）</div>';
+  h+='<div style="font-size:13px;font-weight:700;color:#123a6d;margin-bottom:8px">利润对比（广告'+(customAd*100).toFixed(0)+'%）</div>';
   const prices=[17.99,19.99,21.99,23.99,25.99,27.99,29.99,32.99,35.99];
   const shipMethods=[['海运',shipRates.海运],['快船',shipRates.快船],['空派DHL',shipRates.DHL],['空派专线',shipRates.DHL*0.7]];
   h+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px">';
@@ -4254,7 +4265,7 @@ function pfCalc(){
       const net=pricePt-cu-hf-fba2-comm2-ad2-promo2-refund2-vat2;
       const m2=net/pricePt;
       const c=cellColor(net,m2);
-      h+='<td style="padding:10px 5px;text-align:center;background:'+c.bg+';font-size:13px;font-weight:700;color:'+c.fg+'">'+(net>=0?'+':'')+net.toFixed(2)+'$ / '+(m2*100).toFixed(1)+'%</td>';
+      h+='<td style="padding:14px 5px;text-align:center;background:'+c.bg+';font-size:13px;font-weight:700;color:'+c.fg+'">'+(net>=0?'+':'')+net.toFixed(2)+'$ / '+(m2*100).toFixed(1)+'%</td>';
     });
     h+='</tr>';
   });
