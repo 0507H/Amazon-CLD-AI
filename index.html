@@ -4315,7 +4315,7 @@ function pfAutoDetect(){
   document.getElementById('pf_sizeTier').value=tier;
 }
 ['pf_price','pf_costCny','pf_weight','pf_fx','pf_promoPct','pf_refundPct','pf_adPct','pf_cat','pf_sizeTier','pf_rateSea','pf_rateFast','pf_rateDhl','pf_site'].forEach(function(id){
-  document.getElementById(id).addEventListener('input',pfCalc);
+  document.getElementById(id).addEventListener('input',function(){if(id==='pf_weight')pfAutoDetect();pfCalc();});
   document.getElementById(id).addEventListener('change',pfCalc);
 });
 ['pf_len','pf_wid','pf_hei'].forEach(function(id){
