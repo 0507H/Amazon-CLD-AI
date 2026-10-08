@@ -4262,8 +4262,10 @@ function pfCalc(){
     return{bg:'#ffedd5',fg:'#9a3412'};
   }
   h+='<div style="font-size:13px;font-weight:700;color:#123a6d;margin-bottom:8px">利润对比（广告'+(customAd*100).toFixed(0)+'%）</div>';
-  const basePrice=Math.floor(p);
-  const prices=[basePrice-4+0.99,basePrice-2+0.99,basePrice+0.99,basePrice+2+0.99,basePrice+4+0.99,basePrice+6+0.99,basePrice+8+0.99,basePrice+10+0.99,basePrice+12+0.99].filter(function(v){return v>0;});
+  const low=Math.max(1,Math.floor(bePrice)+0.99);
+  const high=Math.round(p+6)+0.99;
+  const prices=[];
+  for(var pr=low;pr<=high;pr+=1)prices.push(Math.round(pr*100)/100);
   const shipMethods=[['海运',shipRates.海运],['快船',shipRates.快船],['空派DHL',shipRates.DHL],['空派专线',shipRates.DHL*0.7]];
   h+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px">';
   h+='<tr style="background:#123a6d;color:#fff"><th style="padding:5px">售价</th>';
