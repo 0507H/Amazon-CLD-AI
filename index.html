@@ -7,8 +7,16 @@
   var ua=navigator.userAgent.toLowerCase();
   var inLark=ua.indexOf('lark')>-1||ua.indexOf('feishu')>-1||ua.indexOf('bytedance')>-1;
   if(!inLark){
-    document.write('<style>body{overflow:hidden;margin:0}#lk-block{position:fixed;inset:0;background:linear-gradient(135deg,#0B1F3A,#123A6D);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:99999;font-family:"PingFang SC","Microsoft YaHei",sans-serif;text-align:center;padding:20px}#lk-block .ic{font-size:64px;margin-bottom:20px}#lk-block h2{font-size:22px;margin-bottom:12px}#lk-block p{font-size:14px;color:#C7D6EC;line-height:1.8;max-width:420px}</style>');
-    document.write('<div id="lk-block"><div class="ic">🔒</div><h2>请从飞书工作台打开此工具</h2><p>本工具仅限内部人员使用，请在飞书 → 工作台 → 创乐岛-AI工具 中打开。<br>直接访问链接无法使用。</p></div>');
+    var ok=false;
+    try{ok=localStorage.getItem('cld_ok')==='1';}catch(e){}
+    if(!ok){
+      var pw=prompt('请输入访问密码：');
+      if(pw==='Cld123666'){try{localStorage.setItem('cld_ok','1');}catch(e){}}
+      else{
+        document.write('<style>body{overflow:hidden;margin:0}#lk-block{position:fixed;inset:0;background:linear-gradient(135deg,#0B1F3A,#123A6D);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:99999;font-family:"PingFang SC","Microsoft YaHei",sans-serif;text-align:center;padding:20px}#lk-block .ic{font-size:64px;margin-bottom:20px}#lk-block h2{font-size:22px;margin-bottom:12px}</style>');
+        document.write('<div id="lk-block"><div class="ic">🔒</div><h2>密码错误，无法访问</h2><p style="color:#C7D6EC">请联系管理员获取密码</p></div>');
+      }
+    }
   }
 })();
 </script>
