@@ -9,11 +9,7 @@
   if(!inLark){
     var ok=false;
     try{ok=localStorage.getItem('cld_ok')==='1';}catch(e){}
-    if(!ok){
-      var pw=prompt('请输入访问密码：');
-      if(pw==='Cld123666'){try{localStorage.setItem('cld_ok','1');}catch(e){}}
-      else{location.reload();}
-    }
+    if(!ok){document.documentElement.style.display='none';}
   }
 })();
 </script>
