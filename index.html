@@ -35,7 +35,15 @@ body{font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background
 <link rel="prefetch" href="awd-converter.html">
 <link rel="prefetch" href="profit-calc.html">
 <link rel="prefetch" href="date-fix.html">
+<style>
+#lk-block{display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0B1F3A,#123A6D);z-index:99999;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:"PingFang SC","Microsoft YaHei",sans-serif;text-align:center;padding:20px}
+#lk-block.show{display:flex}
+#lk-block .ic{font-size:64px;margin-bottom:20px}
+#lk-block h2{font-size:22px;margin-bottom:12px}
+#lk-block p{font-size:14px;color:#C7D6EC;line-height:1.8;max-width:420px}
+</style>
 </head><body>
+<div id="lk-block"><div class="ic">&#128274;</div><h2>请从飞书工作台打开此工具</h2><p>本工具仅限内部人员使用，请在飞书 → 工作台 → 创乐岛-AI工具 中使用。<br>直接访问链接无法使用。</p></div>
 <div id="loading"><div class="spinner"></div><p>正在加载工具...</p></div>
 <div style='background:#0b1f3a;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:12px;'>
 <a href='CreativeIsland.html' style='display:flex;align-items:center;text-decoration:none'>
@@ -91,5 +99,12 @@ document.querySelectorAll('.tool-card').forEach(function(card){
     document.getElementById('loading').classList.add('show');
   });
 });
+</script>
+<script>
+if(!/Lark|Feishu|lark|feishu/i.test(navigator.userAgent)){
+  window.addEventListener('DOMContentLoaded',function(){
+    document.getElementById('lk-block').classList.add('show');
+  });
+}
 </script>
 </body></html>
