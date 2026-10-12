@@ -4639,12 +4639,20 @@ function handleFile(input) {
     const wb = XLSX.read(e.target.result);
     const ws = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(ws, {header:1});
-    uploadedData = rows.slice(1).filter(r => r[0]);
+    uploadedData = rows.slice(1).filter(r => r[0] && String(r[0]).trim());
+    let previewRows = '';
+    uploadedData.slice(0, 10).forEach(r => {
+      previewRows += `<tr><td>${r[0]||''}</td><td>${r[1]||''}</td><td>${r[2]||''}</td></tr>`;
+    });
+    if(uploadedData.length > 10) previewRows += `<tr><td colspan="3" style="text-align:center;color:#999">...共 ${uploadedData.length} 条</td></tr>`;
     document.getElementById('fileResult').innerHTML =
       `<div class="row"><span>识别到数据</span><span>${uploadedData.length} 条</span></div>
-       <div class="row"><span>列名</span><span>${rows[0].join(' | ')}</span></div>`;
+       <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px">
+       <tr style="background:#f0f4f8"><th style="padding:4px 8px;text-align:left">MSKU</th><th style="padding:4px 8px;text-align:left">ASIN</th><th style="padding:4px 8px;text-align:left">product_type</th></tr>
+       ${previewRows}</table>`;
     document.getElementById('fileResult').classList.add('show');
     document.getElementById('btnGenUpload').disabled = false;
+    generateFromUpload();
   };
   reader.readAsArrayBuffer(file);
 }
@@ -4704,6 +4712,7 @@ function generateFileMulti(byPT) {
     });
   });
   const ws = XLSX.utils.aoa_to_sheet(outRows);
+  ws['!cols'] = [{wch:22},{wch:24},{wch:22},{wch:16},{wch:14},{wch:22},{wch:22},{wch:24}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Template');
   const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
