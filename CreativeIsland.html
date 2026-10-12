@@ -4014,10 +4014,10 @@ $("#btn-clear-comment").addEventListener("click", () => {
 <style>
 #viewProfit{padding:0;background:#f5f7fa;min-height:calc(100vh - 60px)}
 #viewProfit *{box-sizing:border-box;margin:0;padding:0;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
-#viewProfit .pf-topbar{background:linear-gradient(135deg,#0B1F3A,#123A6D);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px}
-#viewProfit .pf-topbar .pf-ic{width:36px;height:36px;border-radius:8px;background:#FF9900;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#0B1F3A}
-#viewProfit .pf-topbar h3{font-size:16px;font-weight:700}
-#viewProfit .pf-topbar p{font-size:11px;color:#C7D6EC;margin-top:1px}
+#viewProfit .pf-topbar{background:#16212e;color:#fff;min-height:56px;padding:0 22px;display:flex;align-items:center;gap:14px;box-sizing:border-box}
+#viewProfit .pf-topbar .pf-ic{width:30px;height:30px;border-radius:0;background:transparent;display:flex;align-items:center;justify-content:center;font-size:20px}
+#viewProfit .pf-topbar h3{font-size:18px;font-weight:700;letter-spacing:.5px}
+#viewProfit .pf-topbar p{font-size:12.5px;color:#9aa7b8;margin-left:10px}
 #viewProfit .pf-body{padding:16px}
 #viewProfit .pf-grid{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:stretch}
 #viewProfit .pf-card{background:#fff;border:1px solid #e5eaf2;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow:hidden}
@@ -4340,15 +4340,15 @@ pfCalc();
 
 /* Header bar */
 #dateFixTool .tool-header {
-  background:linear-gradient(135deg,#0B1F3A,#123A6D);
-  color:#fff; padding:12px 20px; display:flex; align-items:center; gap:12px;
+  background:#16212e; color:#fff; min-height:56px; padding:0 22px;
+  display:flex; align-items:center; gap:14px; box-sizing:border-box;
 }
 #dateFixTool .tool-header .icon {
-  width:36px; height:36px; background:#FF9900; border-radius:8px;
-  display:flex; align-items:center; justify-content:center; font-size:18px;
+  width:30px; height:30px; border-radius:0; background:transparent;
+  display:flex; align-items:center; justify-content:center; flex:none; font-size:20px;
 }
-#dateFixTool .tool-header .title { font-size:16px; font-weight:700; }
-#dateFixTool .tool-header .subtitle { font-size:11px; color:#C7D6EC; margin-top:1px; }
+#dateFixTool .tool-header .title { font-size:18px; font-weight:700; letter-spacing:.5px; }
+#dateFixTool .tool-header .subtitle { font-size:12.5px; color:#9aa7b8; margin-left:10px; }
 
 #dateFixTool .container { max-width:100%; margin:0; padding:16px 20px; }
 
