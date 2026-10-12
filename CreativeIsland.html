@@ -147,6 +147,7 @@ body{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,-apple
       <button class="child-item direct-item" data-view="viewCoupon"><span class="ic">🎟️</span><span class="txt">&nbsp;批量Coupon生成</span></button>
       <button class="child-item direct-item" data-view="viewAwd"><span class="ic">🚚</span><span class="txt">&nbsp;AWD装箱单转换</span></button>
       <button class="child-item direct-item" data-view="viewProfit"><span class="ic">💰</span><span class="txt">&nbsp;利润测算</span></button>
+      <button class="child-item direct-item" data-view="viewDateFix"><span class="ic">📅</span><span class="txt">&nbsp;批量改日期</span></button>
     </nav>
     <div class="toggle-bar"><button id="btnCollapse">◀ 收起导航</button></div>
   </aside>
@@ -4327,5 +4328,602 @@ pfAutoDetect();
 pfCalc();
 })();
 </script>
+
+
+<!-- ===== 批量改日期工具 ===== -->
+<section class="view" id="viewDateFix">
+  
+  <style>
+
+* { margin:0; padding:0; box-sizing:border-box; }
+#dateFixTool { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; background:#f0f2f5; color:#333; }
+
+/* Header bar */
+#dateFixTool .tool-header {
+  background:linear-gradient(135deg,#1e3a5f 0%,#2d5a8e 100%);
+  color:#fff; padding:16px 24px; display:flex; align-items:center; gap:14px;
+}
+#dateFixTool .tool-header .icon {
+  width:40px; height:40px; background:rgba(255,255,255,0.15); border-radius:10px;
+  display:flex; align-items:center; justify-content:center; font-size:20px;
+}
+#dateFixTool .tool-header .title { font-size:18px; font-weight:700; }
+#dateFixTool .tool-header .subtitle { font-size:12px; opacity:0.8; margin-top:2px; }
+
+#dateFixTool .container { max-width:1200px; margin:24px auto; padding:0 20px; }
+
+/* Cards */
+#dateFixTool .card {
+  background:#fff; border-radius:12px; padding:24px; margin-bottom:20px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08);
+}
+#dateFixTool .card h3 { font-size:15px; margin-bottom:16px; color:#1e3a5f; display:flex; align-items:center; gap:8px; }
+
+#dateFixTool .row2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+#dateFixTool @media(max-width:900px) { .row2{grid-template-columns:1fr;} }
+
+/* Inputs */
+#dateFixTool label { display:block; font-size:13px; color:#666; margin-bottom:6px; font-weight:500; }
+#dateFixTool textarea,
+  #dateFixTool input[type=text],
+  #dateFixTool input[type=date],
+  #dateFixTool select {
+  width:100%; padding:10px 12px; border:1px solid #d9d9d9; border-radius:8px;
+  font-size:14px; outline:none; transition:border-color .2s;
+}
+#dateFixTool textarea:focus,
+  #dateFixTool input:focus,
+  #dateFixTool select:focus { border-color:#2d5a8e; }
+#dateFixTool textarea { min-height:120px; resize:vertical; font-family:monospace; font-size:13px; }
+
+/* Product type search dropdown */
+#dateFixTool .pt-wrap { position:relative; }
+#dateFixTool .pt-search { width:100%; padding:10px 12px; border:1px solid #d9d9d9; border-radius:8px; font-size:14px; outline:none; }
+#dateFixTool .pt-list {
+  position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d9d9d9;
+  border-radius:8px; max-height:240px; overflow-y:auto; z-index:100; display:none; margin-top:4px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+#dateFixTool .pt-list.show { display:block; }
+#dateFixTool .pt-item { padding:8px 12px; cursor:pointer; font-size:13px; }
+#dateFixTool .pt-item:hover { background:#e6f0fa; }
+#dateFixTool .pt-item.selected { background:#2d5a8e; color:#fff; }
+
+/* Buttons */
+#dateFixTool .btn {
+  padding:10px 20px; border:none; border-radius:8px; font-size:14px; cursor:pointer;
+  font-weight:600; transition:all .2s; display:inline-flex; align-items:center; gap:6px;
+}
+#dateFixTool .btn-primary { background:#2d5a8e; color:#fff; }
+#dateFixTool .btn-primary:hover { background:#1e3a5f; }
+#dateFixTool .btn-success { background:#27ae60; color:#fff; }
+#dateFixTool .btn-success:hover { background:#219a52; }
+#dateFixTool .btn-outline { background:#fff; color:#2d5a8e; border:1px solid #2d5a8e; }
+#dateFixTool .btn-outline:hover { background:#e6f0fa; }
+#dateFixTool .btn-sm { padding:6px 14px; font-size:13px; }
+
+/* Upload zone */
+#dateFixTool .upload-zone {
+  border:2px dashed #d9d9d9; border-radius:10px; padding:30px; text-align:center;
+  cursor:pointer; transition:all .2s;
+}
+#dateFixTool .upload-zone:hover,
+  #dateFixTool .upload-zone.dragover { border-color:#2d5a8e; background:#f0f6fc; }
+#dateFixTool .upload-zone .icon { font-size:36px; margin-bottom:8px; }
+#dateFixTool .upload-zone p { color:#999; font-size:13px; }
+
+/* Result */
+#dateFixTool .result-box {
+  background:#f8f9fb; border-radius:8px; padding:16px; margin-top:16px; display:none;
+}
+#dateFixTool .result-box.show { display:block; }
+#dateFixTool .result-box .row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #e8e8e8; font-size:13px; }
+#dateFixTool .result-box .row:last-child { border:none; }
+#dateFixTool .result-box .row span:last-child { font-weight:600; color:#1e3a5f; }
+
+#dateFixTool .hint { font-size:12px; color:#999; margin-top:6px; line-height:1.5; }
+#dateFixTool .tag { display:inline-block; background:#e6f0fa; color:#2d5a8e; padding:2px 8px; border-radius:4px; font-size:12px; margin-right:4px; }
+
+  </style>
+  <div id="dateFixTool">
+
+
+<div class="tool-header">
+  <div class="icon">📅</div>
+  <div>
+    <div class="title">批量修改开售日期</div>
+    <div class="subtitle">本地运行 · 将 Offering/Merchant Release Date 改为指定日期 · 自动生成亚马逊后台上传文件</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 日期设置 -->
+  <div class="card">
+    <h3>⚙️ 基础设置</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div>
+        <label>目标日期（改为该日期）</label>
+        <input type="date" id="targetDate" value="2026-10-11">
+        <p class="hint">通常填昨天，产品即可立即开售</p>
+      </div>
+      <div>
+        <label>站点</label>
+        <select id="site">
+          <option value="US">美国站 (US)</option>
+          <option value="UK">英国站 (UK)</option>
+          <option value="DE">德国站 (DE)</option>
+          <option value="CA">加拿大站 (CA)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="row2">
+    <!-- 方式1：直接输入 -->
+    <div class="card">
+      <h3>⌨️ 方式一：直接输入</h3>
+      <label>product_type（类目节点）</label>
+      <div class="pt-wrap">
+        <input type="text" class="pt-search" id="ptSearch" placeholder="输入关键词搜索，如 iron, badge, sticker..." autocomplete="off">
+        <div class="pt-list" id="ptList"></div>
+      </div>
+      <input type="hidden" id="ptValue" value="">
+
+      <div style="margin-top:16px;">
+        <label>MSKU + ASIN（每行一组，格式：MSKU,ASIN）</label>
+        <textarea id="mskuAsinList" placeholder="Badge-012A8610,B0DTV1BN8S&#10;UV DTF-019A30121,B0GFDK6GJX"></textarea>
+        <p class="hint">每行一组，逗号分隔。支持批量粘贴，自动去重。</p>
+      </div>
+
+      <div style="margin-top:16px;">
+        <button class="btn btn-primary" onclick="generateFromInput()">🚀 生成上传文件</button>
+      </div>
+    </div>
+
+    <!-- 方式2：模板填写 -->
+    <div class="card">
+      <h3>📋 方式二：下载模板填写</h3>
+      <button class="btn btn-outline btn-sm" onclick="downloadTemplate()">⬇️ 下载输入模板</button>
+      <div style="margin-top:16px;">
+        <label>上传填写好的文件</label>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <div class="icon">📤</div>
+          <p>点击上传 .xlsx 文件</p>
+          <p class="hint">文件需包含：MSKU、ASIN、product_type 三列</p>
+        </div>
+        <input type="file" id="fileInput" accept=".xlsx" style="display:none" onchange="handleFile(this)">
+      </div>
+      <div id="fileResult" class="result-box"></div>
+      <div style="margin-top:16px;">
+        <button class="btn btn-success" id="btnGenUpload" onclick="generateFromUpload()" disabled>🚀 生成上传文件</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 生成结果 -->
+  <div class="card" id="resultCard" style="display:none;">
+    <h3>✅ 生成结果</h3>
+    <div id="resultDetail"></div>
+    <div style="margin-top:16px;">
+      <button class="btn btn-success" onclick="downloadFile()">⬇️ 下载生成的文件</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// 146 product_type values
+const PRODUCT_TYPES = [
+  "ADULT_COSTUME","ADVENT_CALENDAR","ANCHOR_STAKE","ANIMAL_COLLAR","APPAREL",
+  "APPAREL_BELT","APPAREL_HEAD_NECK_COVERING","APPAREL_PIN","APRON","AREA_DEODORIZER",
+  "ARTIFICIAL_PLANT","ART_CRAFT_KIT","ART_SUPPLIES","AUTO_ACCESSORY","BABY_PRODUCT",
+  "BACKDROP","BADGE_HOLDER","BALLOON","BANNER","BARBECUE_TOOL_SET",
+  "BEAUTY","BEVERAGE_INSULATOR","BLANKET","BLANK_BOOK","BONDING_ADHESIVES",
+  "BOOKMARK","BOOK_COVER","BOOK_DOCUMENT_STAND","BRACELET","BUCKLE",
+  "CADDY","CAKE_TOPPER","CARD_STOCK","CELL_PHONE_GRIP","CHARM",
+  "CHILDRENS_COSTUME","CLIMBING_PLANT_SUPPORT_STRUCTURE","COFFEE_MAKER","COMPUTER_ADD_ON","CONFETTI",
+  "COOKIE_CUTTER","COSMETIC_CASE","COSTUME_EYEWEAR","COSTUME_HEADWEAR","COSTUME_MASK",
+  "COSTUME_OUTFIT","CUFF_LINK","CURTAIN","CURTAIN_FASTENER","CURTAIN_SWAG_HOLDER",
+  "DECORATIVE_CUTOUT","DECORATIVE_MAGNET","DECORATIVE_PILLOW_COVER","DECORATIVE_POM_POM","DECORATIVE_RIBBON_TRIM",
+  "DECORATIVE_SIGNAGE","DISHWARE_BOWL","DISHWARE_PLACE_SETTING","DISHWARE_PLATE","DISHWASHER",
+  "DISPOSABLE_NAPKIN","DRINKING_CUP","DRINK_COASTER","EARRING","ELECTRIC_FAN",
+  "ELECTRIC_LANTERN","ENVELOPE","FABRIC_APPLIQUE_PATCH","FIGURINE","FLASH_CARD",
+  "FOOD_STORAGE_BAG","GARLAND","GIFT_WRAP","GREETING_CARD","HAIRBAND",
+  "HAIR_CLIP","HANGING_ORNAMENT","HEALTH_PERSONAL_CARE","HOME","HOME_MIRROR",
+  "ICE_CHEST","IRON_ON_TRANSFER_DESIGN","JAR","JEWELRY","JEWELRY_SET",
+  "JEWELRY_STORAGE","KEYCHAIN","KITCHEN","LABEL","LAMP",
+  "LIGHT_FIXTURE","MAILBOX","MINIATURE_TOY_FURNISHING","NAPKIN_RING","NECKLACE",
+  "NECKTIE","OFFICE_PRODUCTS","OUTDOOR_LIVING","PAPER_TOWEL","PAPER_TOWEL_HOLDER",
+  "PARTY_DECORATION_PACK","PARTY_FAVOR","PARTY_SUPPLIES","PET_APPAREL","PET_PLACEMAT",
+  "PET_SUPPLIES","PIERCING_JEWELRY","PINATA","PINBOARD","PLACEMAT",
+  "PORTABLE_ELECTRONIC_DEVICE_COVER","PORTABLE_ELECTRONIC_DEVICE_STAND","POTPOURRI_SACHET","POT_HOLDER","RING",
+  "RUG","SCARF","SCULPTURE","SELF_STICK_NOTE","SEWING_BUTTON",
+  "SEWING_PATTERN","SHARP_PIN","SHELF","SKIRT","SOCKS",
+  "SPORTING_GOODS","STICKER_DECAL","STORAGE_HOOK","TABLECLOTH","TABLETOP_GAME",
+  "TABLE_RUNNER","TEMPORARY_TATTOO","TOTE_BAG","TOWEL","TOYS_AND_GAMES",
+  "TOY_FIGURE","TRAY","TREE_SKIRT","VEHICLE_MIRROR","WALL_ART",
+  "WIG","WIND_CHIME","WIND_SPINNER","WREATH","WRITING_INSTRUMENT",
+  "WRITING_PAPER","TOY_BUILDING_BLOCK","ACCESSORY"
+];
+
+// Product type search
+const ptSearch = document.getElementById('ptSearch');
+const ptList = document.getElementById('ptList');
+const ptValue = document.getElementById('ptValue');
+let selectedPT = '';
+
+function renderPTList(filter='') {
+  const f = filter.toLowerCase();
+  const matches = PRODUCT_TYPES.filter(t => t.toLowerCase().includes(f));
+  ptList.innerHTML = matches.map(t =>
+    `<div class="pt-item ${t===selectedPT?'selected':''}" onclick="selectPT('${t}')">${t}</div>`
+  ).join('');
+  ptList.classList.add('show');
+}
+ptSearch.addEventListener('focus', () => renderPTList());
+ptSearch.addEventListener('input', e => renderPTList(e.target.value));
+document.addEventListener('click', e => {
+  if(!e.target.closest('.pt-wrap')) ptList.classList.remove('show');
+});
+function selectPT(t) {
+  selectedPT = t;
+  ptSearch.value = t;
+  ptValue.value = t;
+  ptList.classList.remove('show');
+}
+
+let uploadedData = null;
+
+async function downloadTemplate() {
+  const data = [
+    ['MSKU','ASIN','product_type'],
+    ['Badge-012A8610','B0DTV1BN8S','BADGE_HOLDER'],
+    ['UV DTF-019A30121','B0GFDK6GJX','IRON_ON_TRANSFER_DESIGN'],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wch:25},{wch:15},{wch:30}];
+
+  // Hidden sheet with all product_type values
+  const typeRows = PRODUCT_TYPES.map(t => [t]);
+  const wsTypes = XLSX.utils.aoa_to_sheet([['product_type'], ...typeRows]);
+  wsTypes['!cols'] = [{wch:30}];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  XLSX.utils.book_append_sheet(wb, wsTypes, '类目列表');
+
+  // Generate as array buffer
+  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+
+  // Post-process with JSZip to inject data validation dropdown
+  const zip = await JSZip.loadAsync(wbout);
+  const sheet1Xml = await zip.file('xl/worksheets/sheet1.xml').async('string');
+
+  // Build data validation XML
+  const n = PRODUCT_TYPES.length + 1;
+  const dvXml = '<dataValidations count="1">' +
+    '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="C2:C1000">' +
+    '<formula1>类目列表!$A$2:$A$' + n + '</formula1>' +
+    '<promptTitle>选择类目</promptTitle>' +
+    '<prompt>从下拉框选择 product_type</prompt>' +
+    '</dataValidation></dataValidations>';
+
+  // Insert before </worksheet>
+  const newXml = sheet1Xml.replace('</worksheet>', dvXml + '</worksheet>');
+  zip.file('xl/worksheets/sheet1.xml', newXml);
+
+  const blob = await zip.generateAsync({type:'blob'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '批量改日期-输入模板.xlsx';
+  a.click();
+}
+
+function handleFile(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const wb = XLSX.read(e.target.result);
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1});
+    uploadedData = rows.slice(1).filter(r => r[0]);
+    document.getElementById('fileResult').innerHTML =
+      `<div class="row"><span>识别到数据</span><span>${uploadedData.length} 条</span></div>
+       <div class="row"><span>列名</span><span>${rows[0].join(' | ')}</span></div>`;
+    document.getElementById('fileResult').classList.add('show');
+    document.getElementById('btnGenUpload').disabled = false;
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseInput() {
+  const text = document.getElementById('mskuAsinList').value.trim();
+  if(!text) { alert('请输入 MSKU + ASIN'); return null; }
+  const rows = [];
+  const seen = new Set();
+  text.split('\n').forEach(line => {
+    line = line.trim();
+    if(!line) return;
+    const parts = line.split(/[,，\t]/);
+    if(parts.length >= 2) {
+      const msku = parts[0].trim();
+      const asin = parts[1].trim();
+      if(!seen.has(asin)) { seen.add(asin); rows.push([msku, asin]); }
+    }
+  });
+  return rows;
+}
+
+function generateFromInput() {
+  const rows = parseInput();
+  if(!rows) return;
+  if(!selectedPT) { alert('请选择 product_type'); return; }
+  generateFile(rows, selectedPT);
+}
+
+function generateFromUpload() {
+  if(!uploadedData) return;
+  // columns: MSKU(0), ASIN(1), product_type(2)
+  const byPT = {};
+  uploadedData.forEach(r => {
+    const pt = (r[2]||'').toString().trim();
+    if(!byPT[pt]) byPT[pt] = [];
+    byPT[pt].push([r[0], r[1]]);
+  });
+  generateFileMulti(byPT);
+}
+
+function generateFile(rows, pt) {
+  generateFileMulti({[pt]: rows});
+}
+
+function generateFileMulti(byPT) {
+  const date = document.getElementById('targetDate').value;
+  // Build output: minimal flat file rows
+  const header = ['sku','product_type','record_action','product_id_type','product_id',
+                  'merchant_release_date','offering_release_date','product_site_launch_date'];
+  const outRows = [header];
+  let total = 0;
+  Object.entries(byPT).forEach(([pt, items]) => {
+    items.forEach(([msku, asin]) => {
+      outRows.push([msku, pt, 'Edit (Partial Update)', 'ASIN', asin, date, date, date]);
+      total++;
+    });
+  });
+  const ws = XLSX.utils.aoa_to_sheet(outRows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Template');
+  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  window._outputBlob = new Blob([wbout], {type:'application/octet-stream'});
+
+  document.getElementById('resultCard').style.display = 'block';
+  let detail = '';
+  Object.entries(byPT).forEach(([pt, items]) => {
+    detail += `<div class="row"><span>${pt}</span><span>${items.length} 条</span></div>`;
+  });
+  document.getElementById('resultDetail').innerHTML = detail +
+    `<div class="row"><span>总计</span><span>${total} 条</span></div>
+     <div class="row"><span>目标日期</span><span>${date}</span></div>`;
+}
+
+function downloadFile() {
+  if(!window._outputBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(window._outputBlob);
+  a.download = '批量修改日期-' + document.getElementById('targetDate').value + '.xlsx';
+  a.click();
+}
+</script>
+
+  </div>
+  <script>
+
+// 146 product_type values
+const PRODUCT_TYPES = [
+  "ADULT_COSTUME","ADVENT_CALENDAR","ANCHOR_STAKE","ANIMAL_COLLAR","APPAREL",
+  "APPAREL_BELT","APPAREL_HEAD_NECK_COVERING","APPAREL_PIN","APRON","AREA_DEODORIZER",
+  "ARTIFICIAL_PLANT","ART_CRAFT_KIT","ART_SUPPLIES","AUTO_ACCESSORY","BABY_PRODUCT",
+  "BACKDROP","BADGE_HOLDER","BALLOON","BANNER","BARBECUE_TOOL_SET",
+  "BEAUTY","BEVERAGE_INSULATOR","BLANKET","BLANK_BOOK","BONDING_ADHESIVES",
+  "BOOKMARK","BOOK_COVER","BOOK_DOCUMENT_STAND","BRACELET","BUCKLE",
+  "CADDY","CAKE_TOPPER","CARD_STOCK","CELL_PHONE_GRIP","CHARM",
+  "CHILDRENS_COSTUME","CLIMBING_PLANT_SUPPORT_STRUCTURE","COFFEE_MAKER","COMPUTER_ADD_ON","CONFETTI",
+  "COOKIE_CUTTER","COSMETIC_CASE","COSTUME_EYEWEAR","COSTUME_HEADWEAR","COSTUME_MASK",
+  "COSTUME_OUTFIT","CUFF_LINK","CURTAIN","CURTAIN_FASTENER","CURTAIN_SWAG_HOLDER",
+  "DECORATIVE_CUTOUT","DECORATIVE_MAGNET","DECORATIVE_PILLOW_COVER","DECORATIVE_POM_POM","DECORATIVE_RIBBON_TRIM",
+  "DECORATIVE_SIGNAGE","DISHWARE_BOWL","DISHWARE_PLACE_SETTING","DISHWARE_PLATE","DISHWASHER",
+  "DISPOSABLE_NAPKIN","DRINKING_CUP","DRINK_COASTER","EARRING","ELECTRIC_FAN",
+  "ELECTRIC_LANTERN","ENVELOPE","FABRIC_APPLIQUE_PATCH","FIGURINE","FLASH_CARD",
+  "FOOD_STORAGE_BAG","GARLAND","GIFT_WRAP","GREETING_CARD","HAIRBAND",
+  "HAIR_CLIP","HANGING_ORNAMENT","HEALTH_PERSONAL_CARE","HOME","HOME_MIRROR",
+  "ICE_CHEST","IRON_ON_TRANSFER_DESIGN","JAR","JEWELRY","JEWELRY_SET",
+  "JEWELRY_STORAGE","KEYCHAIN","KITCHEN","LABEL","LAMP",
+  "LIGHT_FIXTURE","MAILBOX","MINIATURE_TOY_FURNISHING","NAPKIN_RING","NECKLACE",
+  "NECKTIE","OFFICE_PRODUCTS","OUTDOOR_LIVING","PAPER_TOWEL","PAPER_TOWEL_HOLDER",
+  "PARTY_DECORATION_PACK","PARTY_FAVOR","PARTY_SUPPLIES","PET_APPAREL","PET_PLACEMAT",
+  "PET_SUPPLIES","PIERCING_JEWELRY","PINATA","PINBOARD","PLACEMAT",
+  "PORTABLE_ELECTRONIC_DEVICE_COVER","PORTABLE_ELECTRONIC_DEVICE_STAND","POTPOURRI_SACHET","POT_HOLDER","RING",
+  "RUG","SCARF","SCULPTURE","SELF_STICK_NOTE","SEWING_BUTTON",
+  "SEWING_PATTERN","SHARP_PIN","SHELF","SKIRT","SOCKS",
+  "SPORTING_GOODS","STICKER_DECAL","STORAGE_HOOK","TABLECLOTH","TABLETOP_GAME",
+  "TABLE_RUNNER","TEMPORARY_TATTOO","TOTE_BAG","TOWEL","TOYS_AND_GAMES",
+  "TOY_FIGURE","TRAY","TREE_SKIRT","VEHICLE_MIRROR","WALL_ART",
+  "WIG","WIND_CHIME","WIND_SPINNER","WREATH","WRITING_INSTRUMENT",
+  "WRITING_PAPER","TOY_BUILDING_BLOCK","ACCESSORY"
+];
+
+// Product type search
+const ptSearch = document.getElementById('ptSearch');
+const ptList = document.getElementById('ptList');
+const ptValue = document.getElementById('ptValue');
+let selectedPT = '';
+
+function renderPTList(filter='') {
+  const f = filter.toLowerCase();
+  const matches = PRODUCT_TYPES.filter(t => t.toLowerCase().includes(f));
+  ptList.innerHTML = matches.map(t =>
+    `<div class="pt-item ${t===selectedPT?'selected':''}" onclick="selectPT('${t}')">${t}</div>`
+  ).join('');
+  ptList.classList.add('show');
+}
+ptSearch.addEventListener('focus', () => renderPTList());
+ptSearch.addEventListener('input', e => renderPTList(e.target.value));
+document.addEventListener('click', e => {
+  if(!e.target.closest('.pt-wrap')) ptList.classList.remove('show');
+});
+function selectPT(t) {
+  selectedPT = t;
+  ptSearch.value = t;
+  ptValue.value = t;
+  ptList.classList.remove('show');
+}
+
+let uploadedData = null;
+
+async function downloadTemplate() {
+  const data = [
+    ['MSKU','ASIN','product_type'],
+    ['Badge-012A8610','B0DTV1BN8S','BADGE_HOLDER'],
+    ['UV DTF-019A30121','B0GFDK6GJX','IRON_ON_TRANSFER_DESIGN'],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wch:25},{wch:15},{wch:30}];
+
+  // Hidden sheet with all product_type values
+  const typeRows = PRODUCT_TYPES.map(t => [t]);
+  const wsTypes = XLSX.utils.aoa_to_sheet([['product_type'], ...typeRows]);
+  wsTypes['!cols'] = [{wch:30}];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  XLSX.utils.book_append_sheet(wb, wsTypes, '类目列表');
+
+  // Generate as array buffer
+  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+
+  // Post-process with JSZip to inject data validation dropdown
+  const zip = await JSZip.loadAsync(wbout);
+  const sheet1Xml = await zip.file('xl/worksheets/sheet1.xml').async('string');
+
+  // Build data validation XML
+  const n = PRODUCT_TYPES.length + 1;
+  const dvXml = '<dataValidations count="1">' +
+    '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="C2:C1000">' +
+    '<formula1>类目列表!$A$2:$A$' + n + '</formula1>' +
+    '<promptTitle>选择类目</promptTitle>' +
+    '<prompt>从下拉框选择 product_type</prompt>' +
+    '</dataValidation></dataValidations>';
+
+  // Insert before </worksheet>
+  const newXml = sheet1Xml.replace('</worksheet>', dvXml + '</worksheet>');
+  zip.file('xl/worksheets/sheet1.xml', newXml);
+
+  const blob = await zip.generateAsync({type:'blob'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '批量改日期-输入模板.xlsx';
+  a.click();
+}
+
+function handleFile(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const wb = XLSX.read(e.target.result);
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1});
+    uploadedData = rows.slice(1).filter(r => r[0]);
+    document.getElementById('fileResult').innerHTML =
+      `<div class="row"><span>识别到数据</span><span>${uploadedData.length} 条</span></div>
+       <div class="row"><span>列名</span><span>${rows[0].join(' | ')}</span></div>`;
+    document.getElementById('fileResult').classList.add('show');
+    document.getElementById('btnGenUpload').disabled = false;
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseInput() {
+  const text = document.getElementById('mskuAsinList').value.trim();
+  if(!text) { alert('请输入 MSKU + ASIN'); return null; }
+  const rows = [];
+  const seen = new Set();
+  text.split('\n').forEach(line => {
+    line = line.trim();
+    if(!line) return;
+    const parts = line.split(/[,，\t]/);
+    if(parts.length >= 2) {
+      const msku = parts[0].trim();
+      const asin = parts[1].trim();
+      if(!seen.has(asin)) { seen.add(asin); rows.push([msku, asin]); }
+    }
+  });
+  return rows;
+}
+
+function generateFromInput() {
+  const rows = parseInput();
+  if(!rows) return;
+  if(!selectedPT) { alert('请选择 product_type'); return; }
+  generateFile(rows, selectedPT);
+}
+
+function generateFromUpload() {
+  if(!uploadedData) return;
+  // columns: MSKU(0), ASIN(1), product_type(2)
+  const byPT = {};
+  uploadedData.forEach(r => {
+    const pt = (r[2]||'').toString().trim();
+    if(!byPT[pt]) byPT[pt] = [];
+    byPT[pt].push([r[0], r[1]]);
+  });
+  generateFileMulti(byPT);
+}
+
+function generateFile(rows, pt) {
+  generateFileMulti({[pt]: rows});
+}
+
+function generateFileMulti(byPT) {
+  const date = document.getElementById('targetDate').value;
+  // Build output: minimal flat file rows
+  const header = ['sku','product_type','record_action','product_id_type','product_id',
+                  'merchant_release_date','offering_release_date','product_site_launch_date'];
+  const outRows = [header];
+  let total = 0;
+  Object.entries(byPT).forEach(([pt, items]) => {
+    items.forEach(([msku, asin]) => {
+      outRows.push([msku, pt, 'Edit (Partial Update)', 'ASIN', asin, date, date, date]);
+      total++;
+    });
+  });
+  const ws = XLSX.utils.aoa_to_sheet(outRows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Template');
+  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  window._outputBlob = new Blob([wbout], {type:'application/octet-stream'});
+
+  document.getElementById('resultCard').style.display = 'block';
+  let detail = '';
+  Object.entries(byPT).forEach(([pt, items]) => {
+    detail += `<div class="row"><span>${pt}</span><span>${items.length} 条</span></div>`;
+  });
+  document.getElementById('resultDetail').innerHTML = detail +
+    `<div class="row"><span>总计</span><span>${total} 条</span></div>
+     <div class="row"><span>目标日期</span><span>${date}</span></div>`;
+}
+
+function downloadFile() {
+  if(!window._outputBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(window._outputBlob);
+  a.download = '批量修改日期-' + document.getElementById('targetDate').value + '.xlsx';
+  a.click();
+}
+
+  </script>
+</section>
 
 </main></div></body></html>
