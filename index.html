@@ -4677,27 +4677,26 @@ function parseInput() {
   return rows;
 }
 
-function generateFromInput() {
+async function generateFromInput() {
   const rows = parseInput();
   if(!rows) return;
   if(!selectedPT) { alert('请选择 product_type'); return; }
-  generateFile(rows, selectedPT);
+  await generateFile(rows, selectedPT);
 }
 
-function generateFromUpload() {
+async function generateFromUpload() {
   if(!uploadedData) return;
-  // columns: MSKU(0), ASIN(1), product_type(2)
   const byPT = {};
   uploadedData.forEach(r => {
     const pt = (r[2]||'').toString().trim();
     if(!byPT[pt]) byPT[pt] = [];
     byPT[pt].push([r[0], r[1]]);
   });
-  generateFileMulti(byPT);
+  await generateFileMulti(byPT);
 }
 
-function generateFile(rows, pt) {
-  generateFileMulti({[pt]: rows});
+async function generateFile(rows, pt) {
+  await generateFileMulti({[pt]: rows});
 }
 
 function generateFileMulti(byPT) {
@@ -4705,59 +4704,59 @@ function generateFileMulti(byPT) {
   const bstr = atob(BASE_TPL_B64);
   const bytes = new Uint8Array(bstr.length);
   for (let i = 0; i < bstr.length; i++) bytes[i] = bstr.charCodeAt(i);
-  const wb = XLSX.read(bytes, {type:'array'});
-  const ws = wb.Sheets['Template'];
-  const COLS = {sku:3, pt:4, action:5, idType:12, id:13, launch:80, merchant:521, offering:557};
-  Object.keys(ws).forEach(function(k){
-    if(k[0]==='!') return;
-    var cell = XLSX.utils.decode_cell(k);
-    if(cell.r >= 6) delete ws[k];
-  });
-  let row = 7;
-  let total = 0;
+  const zip = await JSZip.loadAsync(bytes);
+  const wbXml = await zip.file('xl/workbook.xml').async('string');
+  const relsXml = await zip.file('xl/_rels/workbook.xml.rels').async('string');
+  const sheets = [...wbXml.matchAll(/<sheet[^>]*name="([^"]*)"[^>]*r:id="(rId\d+)"/g)];
+  const rels = [...relsXml.matchAll(/<Relationship[^>]*?Target="([^"]*)"[^>]*?Id="(rId\d+)"/g)];
+  let templatePath = null;
+  for (const [, name, rid] of sheets) {
+    if (name === 'Template') {
+      const rel = rels.find(r => r[2] === rid);
+      if (rel) templatePath = rel[1].replace(/^\//, '');
+    }
+  }
+  // Read as ArrayBuffer, decode as UTF-8
+  const xmlBuf = await zip.file(templatePath).async('arraybuffer');
+  let xml = new TextDecoder('utf-8').decode(xmlBuf);
+  const row7Idx = xml.indexOf('<row r="7"');
+  const sdEndIdx = xml.indexOf('</sheetData>');
+  const beforeRows = xml.substring(0, row7Idx);
+  const afterRows = xml.substring(sdEndIdx);
+  const COLS = {sku:'C', pt:'D', action:'E', idType:'L', id:'M', launch:'CB', merchant:'TA', offering:'UK'};
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  let rowNum = 7, total = 0, newRows = '';
   Object.entries(byPT).forEach(([pt, items]) => {
     items.forEach(([msku, asin]) => {
-      ws[XLSX.utils.encode_cell({r:row-1, c:COLS.sku-1})] = {t:'s', v:msku};
-      ws[XLSX.utils.encode_cell({r:row-1, c:COLS.pt-1})] = {t:'s', v:pt};
-      ws[XLSX.utils.encode_cell({r:row-1, c:COLS.action-1})] = {t:'s', v:'Edit (Partial Update)'};
-      ws[XLSX.utils.encode_cell({r:row-1, c:COLS.idType-1})] = {t:'s', v:'ASIN'};
-      ws[XLSX.utils.encode_cell({r:row-1, c:COLS.id-1})] = {t:'s', v:asin};
-      ws[XLSX.utils.encode_cell({r:row-1, c:COLS.launch-1})] = {t:'s', v:date};
-      ws[XLSX.utils.encode_cell({r:row-1, c:COLS.merchant-1})] = {t:'s', v:date};
-      ws[XLSX.utils.encode_cell({r:row-1, c:COLS.offering-1})] = {t:'s', v:date};
-      row++;
-      total++;
+      newRows += '<row r="'+rowNum+'">';
+      newRows += '<c r="'+COLS.sku+rowNum+'" t="inlineStr"><is><t>'+esc(msku)+'</t></is></c>';
+      newRows += '<c r="'+COLS.pt+rowNum+'" t="inlineStr"><is><t>'+esc(pt)+'</t></is></c>';
+      newRows += '<c r="'+COLS.action+rowNum+'" t="inlineStr"><is><t>Edit (Partial Update)</t></is></c>';
+      newRows += '<c r="'+COLS.idType+rowNum+'" t="inlineStr"><is><t>ASIN</t></is></c>';
+      newRows += '<c r="'+COLS.id+rowNum+'" t="inlineStr"><is><t>'+esc(asin)+'</t></is></c>';
+      newRows += '<c r="'+COLS.launch+rowNum+'" t="inlineStr"><is><t>'+date+'</t></is></c>';
+      newRows += '<c r="'+COLS.merchant+rowNum+'" t="inlineStr"><is><t>'+date+'</t></is></c>';
+      newRows += '<c r="'+COLS.offering+rowNum+'" t="inlineStr"><is><t>'+date+'</t></is></c>';
+      newRows += '</row>';
+      rowNum++; total++;
     });
   });
-  const ref = XLSX.utils.decode_range(ws['!ref'] || 'A1:ABG7');
-  ref.e.r = row - 1;
-  ws['!ref'] = XLSX.utils.encode_range(ref);
-  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-  window._outputBlob = new Blob([wbout], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const card = document.getElementById('dateResultCard');
-  if(card) {
-    card.style.display = 'block';
-    let tbl = '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px">' +
-      '<tr style="background:#e8f0fe"><th style="border:1px solid #ddd;padding:6px;text-align:left">SKU</th>' +
-      '<th style="border:1px solid #ddd;padding:6px;text-align:left">Product Type</th>' +
-      '<th style="border:1px solid #ddd;padding:6px;text-align:left">Listing Action</th>' +
-      '<th style="border:1px solid #ddd;padding:6px;text-align:left">Product Id Type</th>' +
-      '<th style="border:1px solid #ddd;padding:6px;text-align:left">Product Id</th>' +
-      '<th style="border:1px solid #ddd;padding:6px;text-align:left">日期</th></tr>';
-    Object.entries(byPT).forEach(([pt, items]) => {
-      items.forEach(([msku, asin]) => {
-        tbl += '<tr><td style="border:1px solid #ddd;padding:6px">' + msku + '</td>' +
-          '<td style="border:1px solid #ddd;padding:6px">' + pt + '</td>' +
-          '<td style="border:1px solid #ddd;padding:6px">Edit (Partial Update)</td>' +
-          '<td style="border:1px solid #ddd;padding:6px">ASIN</td>' +
-          '<td style="border:1px solid #ddd;padding:6px">' + asin + '</td>' +
-          '<td style="border:1px solid #ddd;padding:6px">' + date + '</td></tr>';
-      });
+  xml = beforeRows + newRows + afterRows;
+  // Encode back to Uint8Array
+  const outBuf = new TextEncoder().encode(xml);
+  zip.file(templatePath, outBuf);
+  const out = await zip.generateAsync({type:'uint8array', compression:'DEFLATE'});
+  window._outputBlob = new Blob([out.buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  document.getElementById('resultCard').style.display = 'block';
+  let tbl = '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px">';
+  tbl += '<tr style="background:#e8f0fe"><th style="border:1px solid #ddd;padding:6px;text-align:left">SKU</th><th style="border:1px solid #ddd;padding:6px;text-align:left">Product Type</th><th style="border:1px solid #ddd;padding:6px;text-align:left">Listing Action</th><th style="border:1px solid #ddd;padding:6px;text-align:left">Product Id Type</th><th style="border:1px solid #ddd;padding:6px;text-align:left">Product Id</th><th style="border:1px solid #ddd;padding:6px;text-align:left">日期</th></tr>';
+  Object.entries(byPT).forEach(([pt, items]) => {
+    items.forEach(([msku, asin]) => {
+      tbl += '<tr><td style="border:1px solid #ddd;padding:6px">'+msku+'</td><td style="border:1px solid #ddd;padding:6px">'+pt+'</td><td style="border:1px solid #ddd;padding:6px">Edit (Partial Update)</td><td style="border:1px solid #ddd;padding:6px">ASIN</td><td style="border:1px solid #ddd;padding:6px">'+asin+'</td><td style="border:1px solid #ddd;padding:6px">'+date+'</td></tr>';
     });
-    tbl += '</table><div style="margin-top:8px;font-size:13px;color:#666">共 ' + total + ' 条记录 | 目标日期 ' + date + '</div>';
-    document.getElementById('dateResultDetail').innerHTML = tbl;
-  }
-}
+  });
+  tbl += '</table><div style="margin-top:8px;font-size:13px;color:#666">共 '+total+' 条记录 | 目标日期 '+date+'</div>';
+  document.getElementById('resultDetail').innerHTML = tbl;
 
 function downloadFile() {
   if(!window._outputBlob) return;
