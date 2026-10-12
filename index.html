@@ -4700,7 +4700,6 @@ function generateFile(rows, pt) {
 
 function generateFileMulti(byPT) {
   const date = document.getElementById('targetDate').value;
-  // Build output: minimal flat file rows
   const header = ['sku','product_type','record_action','product_id_type','product_id',
                   'merchant_release_date','offering_release_date','product_site_launch_date'];
   const outRows = [header];
@@ -4717,15 +4716,14 @@ function generateFileMulti(byPT) {
   XLSX.utils.book_append_sheet(wb, ws, 'Template');
   const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
   window._outputBlob = new Blob([wbout], {type:'application/octet-stream'});
-
-  document.getElementById('dateResultCard').style.display = 'block';
-  let detail = '';
-  Object.entries(byPT).forEach(([pt, items]) => {
-    detail += `<div class="row"><span>${pt}</span><span>${items.length} 条</span></div>`;
-  });
-  document.getElementById('dateResultDetail').innerHTML = detail +
-    `<div class="row"><span>总计</span><span>${total} 条</span></div>
-     <div class="row"><span>目标日期</span><span>${date}</span></div>`;
+  const dlBtn = '<button class="btn btn-success" onclick="downloadFile()" style="margin-top:12px">⬇️ 下载生成的文件（' + total + '条）</button>';
+  const card = document.getElementById('dateResultCard');
+  if(card) {
+    card.style.display = 'block';
+    document.getElementById('dateResultDetail').innerHTML =
+      '<div class="row"><span>总计</span><span>' + total + ' 条</span></div>' +
+      '<div class="row"><span>目标日期</span><span>' + date + '</span></div>' + dlBtn;
+  }
 }
 
 function downloadFile() {
