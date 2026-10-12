@@ -4691,7 +4691,7 @@ async function generateFile(rows, pt) {
   await generateFileMulti({[pt]: rows});
 }
 
-function generateFileMulti(byPT) {
+async function generateFileMulti(byPT) {
   const date = document.getElementById('targetDate').value;
   const bstr = atob(BASE_TPL_B64);
   const bytes = new Uint8Array(bstr.length);
@@ -4749,6 +4749,7 @@ function generateFileMulti(byPT) {
   });
   tbl += '</table><div style="margin-top:8px;font-size:13px;color:#666">共 '+total+' 条记录 | 目标日期 '+date+'</div>';
   document.getElementById('resultDetail').innerHTML = tbl;
+}
 
 function downloadFile() {
   if(!window._outputBlob) return;
