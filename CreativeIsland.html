@@ -4715,6 +4715,28 @@ function downloadFile() {
   a.download = '批量修改日期-' + document.getElementById('targetDate').value + '.xlsx';
   a.click();
 }
+
+// Drag and drop
+(function(){
+  const zone = document.getElementById('uploadZone');
+  if(!zone) return;
+  ['dragover','dragenter'].forEach(ev => zone.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation();
+    zone.classList.add('dragover');
+  }));
+  ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation();
+    zone.classList.remove('dragover');
+  }));
+  zone.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if(file) {
+      const input = document.getElementById('fileInput');
+      input.files = e.dataTransfer.files;
+      handleFile(input);
+    }
+  });
+})();
 </script>
 
   </div>
