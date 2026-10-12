@@ -471,7 +471,7 @@ window.ExcelJS || document.write('<script src="https://cdnjs.cloudflare.com/ajax
   });
   var items=document.querySelectorAll('.child-item');
   // 视图映射：每个视图对应要激活的 #picTool 内 page
-  var pageMap={'viewPicSingle':'page-single','viewPicMulti':'page-multi','viewAdGen':null,'viewCoupon':null,'viewAwd':null,'viewProfit':null};
+  var pageMap={'viewPicSingle':'page-single','viewPicMulti':'page-multi','viewAdGen':null,'viewCoupon':null,'viewAwd':null,'viewProfit':null,'viewDateFix':null};
   items.forEach(function(it){
     it.onclick=function(){
       items.forEach(function(x){x.classList.remove('active')});
