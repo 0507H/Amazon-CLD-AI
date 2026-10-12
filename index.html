@@ -4513,9 +4513,9 @@ pfCalc();
   </div>
 
   <!-- 生成结果 -->
-  <div class="card" id="resultCard" style="display:none;">
+  <div class="card" id="dateResultCard" style="display:none;">
     <h3>✅ 生成结果</h3>
-    <div id="resultDetail"></div>
+    <div id="dateResultDetail"></div>
     <div style="margin-top:16px;">
       <button class="btn btn-success" onclick="downloadFile()">⬇️ 下载生成的文件</button>
     </div>
@@ -4709,12 +4709,12 @@ function generateFileMulti(byPT) {
   const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
   window._outputBlob = new Blob([wbout], {type:'application/octet-stream'});
 
-  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('dateResultCard').style.display = 'block';
   let detail = '';
   Object.entries(byPT).forEach(([pt, items]) => {
     detail += `<div class="row"><span>${pt}</span><span>${items.length} 条</span></div>`;
   });
-  document.getElementById('resultDetail').innerHTML = detail +
+  document.getElementById('dateResultDetail').innerHTML = detail +
     `<div class="row"><span>总计</span><span>${total} 条</span></div>
      <div class="row"><span>目标日期</span><span>${date}</span></div>`;
 }
