@@ -4749,7 +4749,7 @@ async function generateFileMulti(byPT) {
   zip.file(templatePath, outBuf);
   const out = await zip.generateAsync({type:'uint8array', compression:'DEFLATE'});
   window._outputBlob = new Blob([out.buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('dateResultCard').style.display = 'block';
   let tbl = '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px">';
   tbl += '<tr style="background:#e8f0fe"><th style="border:1px solid #ddd;padding:6px;text-align:left">SKU</th><th style="border:1px solid #ddd;padding:6px;text-align:left">Product Type</th><th style="border:1px solid #ddd;padding:6px;text-align:left">Listing Action</th><th style="border:1px solid #ddd;padding:6px;text-align:left">Product Id Type</th><th style="border:1px solid #ddd;padding:6px;text-align:left">Product Id</th><th style="border:1px solid #ddd;padding:6px;text-align:left">日期</th></tr>';
   Object.entries(byPT).forEach(([pt, items]) => {
@@ -4758,7 +4758,7 @@ async function generateFileMulti(byPT) {
     });
   });
   tbl += '</table><div style="margin-top:8px;font-size:13px;color:#666">共 '+total+' 条记录 | 目标日期 '+date+'</div>';
-  document.getElementById('resultDetail').innerHTML = tbl;
+  document.getElementById('dateResultDetail').innerHTML = tbl;
 }
 
 function downloadFile() {
