@@ -109,7 +109,7 @@ if(!/Lark|Feishu|lark|feishu/i.test(navigator.userAgent)){
   document.body.style.position='fixed';
   document.body.style.width='100%';
   window.addEventListener('DOMContentLoaded',function(){
-    document.getElementById('lk-block').classList.add('show');
+    document.getElementById('lk-block').parentElement.style.overflow='hidden';getElementById('lk-block').classList.add('show');
   });
 }
 </script>
