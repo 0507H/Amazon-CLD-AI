@@ -103,14 +103,12 @@ document.querySelectorAll('.tool-card').forEach(function(card){
 </script>
 <script>
 if(!/Lark|Feishu|lark|feishu/i.test(navigator.userAgent)){
-  document.documentElement.style.overflow='hidden';
-  document.body.style.overflow='hidden';
-  document.body.style.height='100vh';
-  document.body.style.position='fixed';
-  document.body.style.width='100%';
-  window.addEventListener('DOMContentLoaded',function(){
-    document.getElementById('lk-block').parentElement.style.overflow='hidden';getElementById('lk-block').classList.add('show');
-  });
+  (function(){
+    var el = document.getElementById('lk-block');
+    if(el){ el.classList.add('show'); el.style.display='flex'; }
+    document.documentElement.style.overflow='hidden';
+    document.body.style.overflow='hidden';
+  })();
 }
 </script>
 </body></html>
