@@ -36,8 +36,9 @@ body{font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background
 <link rel="prefetch" href="profit-calc.html">
 <link rel="prefetch" href="date-fix.html">
 <style>
-#lk-block{display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0B1F3A,#123A6D);z-index:99999;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:"PingFang SC","Microsoft YaHei",sans-serif;text-align:center;padding:20px}
+#lk-block{display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;background:#0B1F3A;z-index:2147483647;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:"PingFang SC","Microsoft YaHei",sans-serif;text-align:center;padding:20px;box-sizing:border-box}
 #lk-block.show{display:flex}
+#lk-block.show ~ *{visibility:hidden!important}
 #lk-block .ic{font-size:64px;margin-bottom:20px}
 #lk-block h2{font-size:22px;margin-bottom:12px}
 #lk-block p{font-size:14px;color:#C7D6EC;line-height:1.8;max-width:420px}
@@ -102,6 +103,11 @@ document.querySelectorAll('.tool-card').forEach(function(card){
 </script>
 <script>
 if(!/Lark|Feishu|lark|feishu/i.test(navigator.userAgent)){
+  document.documentElement.style.overflow='hidden';
+  document.body.style.overflow='hidden';
+  document.body.style.height='100vh';
+  document.body.style.position='fixed';
+  document.body.style.width='100%';
   window.addEventListener('DOMContentLoaded',function(){
     document.getElementById('lk-block').classList.add('show');
   });
