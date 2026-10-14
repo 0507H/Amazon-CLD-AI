@@ -471,7 +471,8 @@ function generate() {
       vals[7] = item.highlight;
       vals[8] = brandVal;
       vals[9] = 'GTIN Exempt';
-      vals[15] = item.msku;
+      vals[11] = pt;
+      vals[15] = (item.title||'').split(/[,|]+/)[0].trim().substring(0,40);
       vals[16] = brandVal;
       vals[29] = item.description;
       vals[30] = item.bullet1;
@@ -489,6 +490,10 @@ function generate() {
       vals[58] = item.msku;
       vals[78] = dateStr;
       vals[91] = 'Clip';
+      vals[96] = pkgL;
+      vals[97] = dimUnit;
+      vals[98] = pkgW;
+      vals[99] = dimUnit;
       vals[100] = '1';
       vals[109] = 'New';
       vals[111] = priceVal.toFixed(2);
