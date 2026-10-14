@@ -85,7 +85,6 @@ if(new URLSearchParams(location.search).get('embed')==='1'){
         <div class="form-group"><label>品牌名</label><input id="brand"></div>
         <div class="form-group"><label>售价(USD)</label><input id="price" type="number" step="0.01"></div>
         <div class="form-group"><label>父体MSKU <span id="parentSkuReq" style="color:#e53935">*</span></label><input id="parentSku"></div>
-        <div class="form-group"><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="singleListing" onchange="toggleSingleListing()"> 单链接（无父体）</label></div>
         <div class="form-group"><label>变体主题</label><select id="vTheme"><option>COLOR</option><option>SIZE</option><option>CAPACITY</option><option>PATTERN</option><option>THEME</option><option>SET_NAME</option><option>NUMBER_OF_ITEMS</option><option>无变体</option></select></div>
         <div class="form-group"><label>材质（选填）</label><input id="material"></div>
         <div class="form-group"><label>包装长(in)</label><input id="pkgL" type="number" step="0.01"></div>
@@ -94,12 +93,26 @@ if(new URLSearchParams(location.search).get('embed')==='1'){
         <div class="form-group"><label>包装重量(lb)</label><input id="pkgWt" type="number" step="0.01"></div>
       </div>
       <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center;">
-        <div style="display:flex;gap:10px;">
+        <div style="display:flex;gap:10px;align-items:center;">
           <button class="btn btn-orange" style="padding:9px 40px;" onclick="generate()">生成上传模板</button>
           <button class="btn" style="padding:9px 20px;background:#fff;border:1px solid #ddd;color:#333;" onclick="applyToTemplate()">应用至表格</button>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#555;cursor:pointer;"><input type="checkbox" id="singleListing" onchange="toggleSingleListing()"> 单链接</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#555;">尺寸单位：
+            <select id="dimUnit" onchange="renderPreview()" style="padding:3px 6px;border:1px solid #ddd;border-radius:4px;">
+              <option value="Inches">Inch</option>
+              <option value="Centimeters">CM</option>
+            </select>
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#555;">重量单位：
+            <select id="wtUnit" onchange="renderPreview()" style="padding:3px 6px;border:1px solid #ddd;border-radius:4px;">
+              <option value="Pounds">LB</option>
+              <option value="Kilograms">KG</option>
+            </select>
+          </label>
         </div>
         <span style="font-size:12px;color:#1976d2;cursor:pointer;text-decoration:underline;" onclick="loadSample()">没有文件？载入示例数据试试</span>
       </div>
+      <div id="filePreview" style="margin-top:14px;"></div>
     </div>
   </div>
 
@@ -147,6 +160,46 @@ uz.addEventListener('drop', (e) => {
   uz.style.borderColor=''; uz.style.background='';
   if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
 });
+
+function renderPreview() {
+  if(!parsedData) return;
+  const children = parsedData.filter(i=>!i.isParent);
+  const formPt = document.getElementById('ptSelect').value;
+  const formMaterial = document.getElementById('material').value.trim();
+  const formPkgL = document.getElementById('pkgL').value;
+  const formPkgW = document.getElementById('pkgW').value;
+  const formPkgH = document.getElementById('pkgH').value;
+  const formPkgWt = document.getElementById('pkgWt').value;
+  
+  const fields = [
+    ['msku','MSKU'], ['category','类目'], ['title','标题'], ['highlight','亮点'],
+    ['bullet1','五点1'], ['bullet2','五点2'], ['bullet3','五点3'], ['bullet4','五点4'], ['bullet5','五点5'],
+    ['description','描述'], ['st','ST'], ['color','颜色'], ['material','材质'],
+    ['pkgL','长(inch)'], ['pkgW','宽(inch)'], ['pkgH','高(inch)'], ['pkgWt','重(LB)']
+  ];
+  const fallbacks = { category: formPt, material: formMaterial, pkgL: formPkgL, pkgW: formPkgW, pkgH: formPkgH, pkgWt: formPkgWt };
+  
+  let tableHtml = '<div style="overflow-x:auto;border:1px solid #ddd;border-radius:6px">';
+  tableHtml += '<table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap">';
+  tableHtml += '<tr style="background:#f0f4ff">';
+  fields.forEach(([k,label]) => {
+    tableHtml += `<th style="padding:6px 12px;text-align:left;border-bottom:2px solid #ddd;font-weight:600;color:#2F5496">${label}</th>`;
+  });
+  tableHtml += '</tr>';
+  children.forEach(c => {
+    tableHtml += '<tr style="border-bottom:1px solid #eee">';
+    fields.forEach(([k]) => {
+      const fileV = c[k] || '';
+      const fbV = fallbacks[k] || '';
+      const v = fileV || fbV;
+      const bg = v ? '#fff' : '#fff8e1';
+      tableHtml += `<td style="padding:5px 12px;border-bottom:1px solid #eee;background:${bg}" title="${v}">${v ? String(v).substring(0,30) : '<span style="color:#ff9800">—</span>'}</td>`;
+    });
+    tableHtml += '</tr>';
+  });
+  tableHtml += '</table></div>';
+  document.getElementById('filePreview').innerHTML = tableHtml;
+}
 
 function handleFile(file) {
   const reader = new FileReader();
@@ -231,44 +284,16 @@ function handleFile(file) {
       children.forEach(c => {
         if(!c.category && !formPt) warnings.push(`⚠️ ${c.msku} 未填类目`);
         const pL = c.pkgL || formPkgL, pW = c.pkgW || formPkgW, pH = c.pkgH || formPkgH, pWt = c.pkgWt || formPkgWt;
-        if(!pL) warnings.push(`⚠️ ${c.msku} 未填包装长`);
-        if(!pW) warnings.push(`⚠️ ${c.msku} 未填包装宽`);
-        if(!pH) warnings.push(`⚠️ ${c.msku} 未填包装高`);
-        if(!pWt) warnings.push(`⚠️ ${c.msku} 未填包装重`);
+        if(!pL || !pW || !pH || !pWt) warnings.push(`⚠️ ${c.msku} 未填包装尺寸`);
       });
       
-      let previewHtml = `<div class="file-info"><span>✅ 已识别：${items.length} 行（${items.filter(i=>i.isParent).length}父体 + ${children.length}子体）</span></div>`;
-      
+      let infoHtml = `<div class="file-info"><span>✅ 已识别：${items.length} 行（${items.filter(i=>i.isParent).length}父体 + ${children.length}子体）</span></div>`;
       if(warnings.length > 0) {
-        previewHtml += `<div class="error-bar">${warnings.join('<br>')}</div>`;
+        infoHtml += `<div class="error-bar">${warnings.join('<br>')}</div>`;
       }
+      document.getElementById('fileInfo').innerHTML = infoHtml;
       
-      // Field fill status table - spreadsheet style
-      const fields = [
-        ['msku','MSKU'], ['category','类目'], ['title','标题'], ['highlight','亮点'],
-        ['bullet1','五点1'], ['bullet2','五点2'], ['bullet3','五点3'], ['bullet4','五点4'], ['bullet5','五点5'],
-        ['description','描述'], ['st','ST'], ['color','颜色'], ['material','材质'],
-        ['pkgL','长'], ['pkgW','宽'], ['pkgH','高'], ['pkgWt','重']
-      ];
-      previewHtml += '<div style="margin-top:10px;overflow-x:auto;border:1px solid #ddd;border-radius:6px">';
-      previewHtml += '<table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap">';
-      previewHtml += '<tr style="background:#f0f4ff">';
-      fields.forEach(([k,label]) => {
-        previewHtml += `<th style="padding:6px 12px;text-align:left;border-bottom:2px solid #ddd;font-weight:600;color:#2F5496">${label}</th>`;
-      });
-      previewHtml += '</tr>';
-      children.forEach(c => {
-        previewHtml += '<tr style="border-bottom:1px solid #eee">';
-        fields.forEach(([k]) => {
-          const v = c[k] || '';
-          const bg = v ? '#fff' : '#fff8e1';
-          previewHtml += `<td style="padding:5px 12px;border-bottom:1px solid #eee;background:${bg}" title="${v}">${v ? String(v).substring(0,30) : '<span style="color:#ff9800">—</span>'}</td>`;
-        });
-        previewHtml += '</tr>';
-      });
-      previewHtml += '</table></div>';
-      
-      document.getElementById('fileInfo').innerHTML = previewHtml;
+      renderPreview();
     } catch(err) {
       document.getElementById('fileInfo').innerHTML = `<div class="error-bar">❌ 解析失败：${err.message}</div>`;
     }
@@ -295,6 +320,7 @@ function applyToTemplate() {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '文案编写');
   XLSX.writeFile(wb, '新品文案编写表-'+parentSku+'.xlsx');
+  renderPreview();
 }
 
 function downloadTemplate() {
@@ -423,7 +449,7 @@ function generate() {
     row[35] = item.st;             // AJ: Generic Keyword
     row[36] = detectSpecialFeatures(item); // AK: Special Features #1
     row[41] = item.color;           // AP: Style
-    row[42] = item.material;        // AQ: Material
+    row[42] = item.material || document.getElementById('material').value; // AQ: Material
     row[47] = '1';                  // AV: Number of Items
     row[48] = '1';                  // AW: Item Package Quantity
     row[51] = item.color;           // AZ: Color
@@ -440,14 +466,16 @@ function generate() {
     row[140] = priceVal.toFixed(2); // EK: Your Price USD
     row[147] = dateStr;             // ER: Offering Release Date
     // Package dimensions
+    const dimUnit = document.getElementById('dimUnit').value;
+    const wtUnit = document.getElementById('wtUnit').value;
     row[166] = pkgL;                // FK: Package Length
-    row[167] = 'Inches';            // FL: Package Length Unit
+    row[167] = dimUnit;             // FL: Package Length Unit
     row[168] = pkgW;                // FM: Package Width
-    row[169] = 'Inches';            // FN: Package Width Unit
+    row[169] = dimUnit;             // FN: Package Width Unit
     row[170] = pkgH;                // FO: Package Height
-    row[171] = 'Inches';            // FP: Package Height Unit
+    row[171] = dimUnit;             // FP: Package Height Unit
     row[172] = pkgWt;               // FQ: Package Weight
-    row[173] = 'Pounds';            // FR: Package Weight Unit
+    row[173] = wtUnit;              // FR: Package Weight Unit
     row[174] = 'China';             // FS: Country of Origin
     row[177] = 'No';                // FV: Batteries Required
     row[201] = 'Not Applicable';    // GT: Dangerous Goods
