@@ -408,111 +408,102 @@ function generate() {
   // Decode template
   const tplBytes = Uint8Array.from(atob(TEMPLATE_B64), c => c.charCodeAt(0));
   const wb = XLSX.read(tplBytes, {type:'array'});
-  const ws = wb.Sheets['Template'];
-  const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false});
-  
-  // Clear data rows (keep 5 header rows: settings, green, blue, English, system)
-  while(aoa.length > 5) aoa.pop();
   
   // Only generate child rows (no parent row)
   const children = parsedData.filter(i => !i.isParent);
   if(children.length === 0) { alert('没有子体数据'); return; }
   
-  children.forEach(item => {
-    const row = new Array(aoa[4].length).fill('');
+  // Write data directly into template sheet (preserve formatting)
+  const ws = wb.Sheets['Template'];
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  // Clear old data rows (row 6+ = index 5+)
+  for(let r = 5; r <= range.e.r; r++) {
+    for(let c = 0; c <= range.e.c; c++) {
+      const cell = XLSX.utils.encode_cell({r:r, c:c});
+      if(ws[cell]) delete ws[cell];
+    }
+  }
+  // Write our data starting at row 6 (0-indexed row 5)
+  children.forEach((item, i) => {
+    const row = new Array(range.e.c + 1).fill('');
     
-    // Priority: 文案表 > 工具表单
     const pt = item.category || ptVal;
     const pkgL = item.pkgL || formPkgL;
     const pkgW = item.pkgW || formPkgW;
     const pkgH = item.pkgH || formPkgH;
     const pkgWt = item.pkgWt || formPkgWt;
-    
-    // Column indices (0-based) based on new 293-col template
-    row[0] = item.msku;           // A: SKU
-    row[1] = pt;                   // B: Product Type
-    row[2] = 'Create or Replace (Full Update)'; // C: Listing Action
-    row[3] = isSingle ? '' : 'Child'; // D: Parentage Level
-    row[4] = isSingle ? '' : parentSkuVal; // E: Parent SKU
-    row[5] = isSingle ? '' : 'COLOR'; // F: Variation Theme Name
-    row[6] = item.title;          // G: Item Name
-    row[7] = item.highlight;       // H: Item Highlight
-    row[8] = brandVal;             // I: Brand Name
-    row[9] = 'GTIN Exempt';        // J: Product Id Type
-    row[11] = '';                  // L: Item Type Keyword (left blank, will be auto by Amazon)
-    row[15] = item.msku;           // P: Model Number
-    row[16] = brandVal;            // Q: Manufacturer
-    row[29] = item.description;    // AD: Product Description
-    row[30] = item.bullet1;        // AE: Bullet #1
-    row[31] = item.bullet2;        // AF: Bullet #2
-    row[32] = item.bullet3;        // AG: Bullet #3
-    row[33] = item.bullet4;        // AH: Bullet #4
-    row[34] = item.bullet5;        // AI: Bullet #5
-    row[35] = item.st;             // AJ: Generic Keyword
-    row[36] = detectSpecialFeatures(item); // AK: Special Features #1
-    row[41] = item.color;           // AP: Style
-    row[42] = item.material || document.getElementById('material').value; // AQ: Material
-    row[47] = '1';                  // AV: Number of Items
-    row[48] = '1';                  // AW: Item Package Quantity
-    row[51] = item.color;           // AZ: Color
-    row[58] = item.msku;            // BG: Part Number
-    row[78] = dateStr;              // CA: Product Site Launch Date
-    row[91] = 'Clip';               // CN: Closure Type
-    row[100] = '1';                 // CW: Number of Packs
-    row[109] = 'New';               // DF: Item Condition
-    row[111] = priceVal.toFixed(2); // DH: List Price
-    row[112] = 'A_GEN_NOTAX';       // DI: Product Tax Code
-    row[113] = dateStr;             // DJ: Merchant Release Date
-    row[114] = '20';                // DK: Max Order Qty
-    row[135] = 'Fulfillment by Amazon (NA)'; // EF: Fulfillment Channel
-    row[140] = priceVal.toFixed(2); // EK: Your Price USD
-    row[147] = dateStr;             // ER: Offering Release Date
-    // Package dimensions
     const dimUnit = document.getElementById('dimUnit').value;
     const wtUnit = document.getElementById('wtUnit').value;
-    row[166] = pkgL;                // FK: Package Length
-    row[167] = dimUnit;             // FL: Package Length Unit
-    row[168] = pkgW;                // FM: Package Width
-    row[169] = dimUnit;             // FN: Package Width Unit
-    row[170] = pkgH;                // FO: Package Height
-    row[171] = dimUnit;             // FP: Package Height Unit
-    row[172] = pkgWt;               // FQ: Package Weight
-    row[173] = wtUnit;              // FR: Package Weight Unit
-    row[174] = 'China';             // FS: Country of Origin
-    row[177] = 'No';                // FV: Batteries Required
-    row[201] = 'Not Applicable';    // GT: Dangerous Goods
-    row[202] = 'Not Applicable';    // GU
-    row[203] = 'Not Applicable';    // GV
-    row[204] = 'Not Applicable';    // GW
-    row[205] = 'Not Applicable';    // GX
     
-    aoa.push(row);
+    row[0] = item.msku;
+    row[1] = pt;
+    row[2] = 'Create or Replace (Full Update)';
+    row[3] = isSingle ? '' : 'Child';
+    row[4] = isSingle ? '' : parentSkuVal;
+    row[5] = isSingle ? '' : 'COLOR';
+    row[6] = item.title;
+    row[7] = item.highlight;
+    row[8] = brandVal;
+    row[9] = 'GTIN Exempt';
+    row[15] = item.msku;
+    row[16] = brandVal;
+    row[29] = item.description;
+    row[30] = item.bullet1;
+    row[31] = item.bullet2;
+    row[32] = item.bullet3;
+    row[33] = item.bullet4;
+    row[34] = item.bullet5;
+    row[35] = item.st;
+    row[36] = detectSpecialFeatures(item);
+    row[41] = item.color;
+    row[42] = item.material || document.getElementById('material').value;
+    row[47] = '1';
+    row[48] = '1';
+    row[51] = item.color;
+    row[58] = item.msku;
+    row[78] = dateStr;
+    row[91] = 'Clip';
+    row[100] = '1';
+    row[109] = 'New';
+    row[111] = priceVal.toFixed(2);
+    row[112] = 'A_GEN_NOTAX';
+    row[113] = dateStr;
+    row[114] = '20';
+    row[135] = 'Fulfillment by Amazon (NA)';
+    row[140] = priceVal.toFixed(2);
+    row[147] = dateStr;
+    row[166] = pkgL;
+    row[167] = dimUnit;
+    row[168] = pkgW;
+    row[169] = dimUnit;
+    row[170] = pkgH;
+    row[171] = dimUnit;
+    row[172] = pkgWt;
+    row[173] = wtUnit;
+    row[174] = 'China';
+    row[177] = 'No';
+    row[201] = 'Not Applicable';
+    row[202] = 'Not Applicable';
+    row[203] = 'Not Applicable';
+    row[204] = 'Not Applicable';
+    row[205] = 'Not Applicable';
+    
+    row.forEach((val, c) => {
+      if(val !== '') {
+        const cell = XLSX.utils.encode_cell({r: 5+i, c: c});
+        ws[cell] = {t:'s', v:String(val)};
+      }
+    });
   });
-  
-  // Clear conditional formatting by re-sheet
-  const newWs = XLSX.utils.aoa_to_sheet(aoa);
-  newWs['!cols'] = ws['!cols'];
-  wb.Sheets['Template'] = newWs;
+  // Update range
+  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:4+children.length, c:range.e.c}});
   
   // Show preview
   document.getElementById('resultCard').style.display = 'block';
   document.getElementById('resultStats').innerHTML = 
-    `<span><b>${children.length}</b> 个子体</span><span><b>${aoa[4].length}</b> 列</span>`;
+    `<span><b>${children.length}</b> 个子体</span><span><b>${range.e.c+1}</b> 列</span>`;
   
-  let tableHtml = '<table><thead><tr>';
-  const dispRow = aoa[3] || [];
-  dispRow.slice(0,15).forEach(h => tableHtml += `<th>${h||''}</th>`);
-  tableHtml += '</tr></thead><tbody>';
-  aoa.slice(6,11).forEach((row,i) => {
-    tableHtml += '<tr>';
-    row.slice(0,15).forEach((cell,j) => {
-      if(j===0) tableHtml += `<td><span class="tag tag-c">子</span></td>`;
-      tableHtml += `<td title="${cell}">${cell}</td>`;
-    });
-    tableHtml += '</tr>';
-  });
-  tableHtml += '</tbody></table>';
-  document.getElementById('previewTable').innerHTML = tableHtml;
+  document.getElementById('previewTable').innerHTML = '';
   document.getElementById('resultMsg').innerHTML = '<div class="success-bar">✅ 生成完成，点击下载按钮获取库存文件</div>';
   
   window._wb = wb;
