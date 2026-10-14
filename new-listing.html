@@ -269,38 +269,7 @@ function handleFile(file) {
       }
       
       parsedData = items;
-      
-      // Build warnings
-      const warnings = [];
-      const children = items.filter(i=>!i.isParent);
-      const isSingle = document.getElementById('singleListing').checked;
-      const formPt = document.getElementById('ptSelect').value;
-      const formBrand = document.getElementById('brand').value.trim();
-      const formPrice = document.getElementById('price').value;
-      const formParentSku = document.getElementById('parentSku').value.trim();
-      const formPkgL = document.getElementById('pkgL').value;
-      const formPkgW = document.getElementById('pkgW').value;
-      const formPkgH = document.getElementById('pkgH').value;
-      const formPkgWt = document.getElementById('pkgWt').value;
-      
-      if(!formPt) warnings.push('⚠️ 未选择产品类目，请在表单或文案表C列填写');
-      if(!formBrand) warnings.push('⚠️ 未填写品牌名，请在表单或文案表B3填写');
-      if(!formPrice) warnings.push('⚠️ 未填写售价，请在表单或文案表E3填写');
-      if(!isSingle && !formParentSku) warnings.push('⚠️ 未填写父体MSKU（如需单链接请勾选"单链接"）');
-      
-      // Check per-child: category, package dims
-      children.forEach(c => {
-        if(!c.category && !formPt) warnings.push(`⚠️ ${c.msku} 未填类目`);
-        const pL = c.pkgL || formPkgL, pW = c.pkgW || formPkgW, pH = c.pkgH || formPkgH, pWt = c.pkgWt || formPkgWt;
-        if(!pL || !pW || !pH || !pWt) warnings.push(`⚠️ ${c.msku} 未填包装尺寸`);
-      });
-      
-      let infoHtml = `<div class="file-info"><span>✅ 已识别：${items.length} 行（${items.filter(i=>i.isParent).length}父体 + ${children.length}子体）</span></div>`;
-      if(warnings.length > 0) {
-        infoHtml += `<div class="error-bar">${warnings.join('<br>')}</div>`;
-      }
-      document.getElementById('fileInfo').innerHTML = infoHtml;
-      
+      validateAndWarn();
       renderPreview();
     } catch(err) {
       document.getElementById('fileInfo').innerHTML = `<div class="error-bar">❌ 解析失败：${err.message}</div>`;
@@ -309,9 +278,43 @@ function handleFile(file) {
   reader.readAsArrayBuffer(file);
 }
 
+function validateAndWarn() {
+  if(!parsedData) return;
+  const items = parsedData;
+  const warnings = [];
+  const children = items.filter(i=>!i.isParent);
+  const isSingle = document.getElementById('singleListing').checked;
+  const formPt = document.getElementById('ptSelect').value;
+  const formBrand = document.getElementById('brand').value.trim();
+  const formPrice = document.getElementById('price').value;
+  const formParentSku = document.getElementById('parentSku').value.trim();
+  const formPkgL = document.getElementById('pkgL').value;
+  const formPkgW = document.getElementById('pkgW').value;
+  const formPkgH = document.getElementById('pkgH').value;
+  const formPkgWt = document.getElementById('pkgWt').value;
+  
+  if(!formPt) warnings.push('⚠️ 未选择产品类目，请在表单或文案表C列填写');
+  if(!formBrand) warnings.push('⚠️ 未填写品牌名，请在表单或文案表B3填写');
+  if(!formPrice) warnings.push('⚠️ 未填写售价，请在表单或文案表E3填写');
+  if(!isSingle && !formParentSku) warnings.push('⚠️ 未填写父体MSKU（如需单链接请勾选"单链接"）');
+  
+  children.forEach(c => {
+    if(!c.category && !formPt) warnings.push(`⚠️ ${c.msku} 未填类目`);
+    const pL = c.pkgL || formPkgL, pW = c.pkgW || formPkgW, pH = c.pkgH || formPkgH, pWt = c.pkgWt || formPkgWt;
+    if(!pL || !pW || !pH || !pWt) warnings.push(`⚠️ ${c.msku} 未填包装尺寸`);
+  });
+  
+  let infoHtml = `<div class="file-info"><span>✅ 已识别：${items.length} 行（${items.filter(i=>i.isParent).length}父体 + ${children.length}子体）</span></div>`;
+  if(warnings.length > 0) {
+    infoHtml += `<div class="error-bar">${warnings.join('<br>')}</div>`;
+  } else {
+    infoHtml += `<div style="margin-top:6px;padding:8px 12px;background:#e8f5e9;color:#2e7d32;border-radius:4px;font-size:13px">✅ 必填项齐全，可以生成</div>`;
+  }
+  document.getElementById('fileInfo').innerHTML = infoHtml;
+}
+
 function applyToTemplate() {
-  // Clear old warnings
-  document.getElementById('fileInfo').innerHTML = '';
+  validateAndWarn();
   renderPreview();
 }
 }
