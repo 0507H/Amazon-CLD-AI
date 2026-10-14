@@ -77,6 +77,9 @@ if(new URLSearchParams(location.search).get('embed')==='1'){
         <p>拖拽文件到这里，或 <b>点击选择文件</b></p>
         <div class="hint">使用「新品文案编写表-模板.xlsx」格式</div>
         <input type="file" id="fileInput" accept=".xlsx" style="display:none">
+        <div style="margin-top:8px;display:flex;gap:8px;justify-content:center;">
+          <button class="btn" style="padding:6px 16px;background:#fff;border:1px solid #ddd;color:#666;font-size:13px;" onclick="clearFile()">清除文件</button>
+        </div>
       </div>
       <div id="fileInfo"></div>
 
@@ -313,6 +316,13 @@ function validateAndWarn() {
   document.getElementById('fileInfo').innerHTML = infoHtml;
 }
 
+function clearFile() {
+  parsedData = null;
+  document.getElementById('fileInfo').innerHTML = '';
+  document.getElementById('filePreview').innerHTML = '';
+  document.getElementById('fileInput').value = '';
+}
+
 function applyToTemplate() {
   validateAndWarn();
   renderPreview();
@@ -404,15 +414,15 @@ function generate() {
   const ws = wb.Sheets['Template'];
   const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false});
   
-  // Clear data rows (row 7+ = index 6+)
-  while(aoa.length > 6) aoa.pop();
+  // Clear data rows (keep 5 header rows: settings, green, blue, English, system)
+  while(aoa.length > 5) aoa.pop();
   
   // Only generate child rows (no parent row)
   const children = parsedData.filter(i => !i.isParent);
   if(children.length === 0) { alert('没有子体数据'); return; }
   
   children.forEach(item => {
-    const row = new Array(aoa[5].length).fill('');
+    const row = new Array(aoa[4].length).fill('');
     
     // Priority: 文案表 > 工具表单
     const pt = item.category || ptVal;
@@ -490,7 +500,7 @@ function generate() {
   // Show preview
   document.getElementById('resultCard').style.display = 'block';
   document.getElementById('resultStats').innerHTML = 
-    `<span><b>${children.length}</b> 个子体</span><span><b>${aoa[5].length}</b> 列</span>`;
+    `<span><b>${children.length}</b> 个子体</span><span><b>${aoa[4].length}</b> 列</span>`;
   
   let tableHtml = '<table><thead><tr>';
   const dispRow = aoa[3] || [];
