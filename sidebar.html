@@ -482,7 +482,7 @@ window.ExcelJS || document.write('<script src="https://cdnjs.cloudflare.com/ajax
       it.classList.add('active');
       var view=document.getElementById(it.dataset.view);
       view.classList.add('active');
-      var sub=document.querySelector('.t2');
+      var sub=document.querySelector('.topbar .t2');
       if(sub && subMap[it.dataset.view]) sub.textContent=subMap[it.dataset.view];
       // 同步激活图片工具内部 page
       var pid=pageMap[it.dataset.view];

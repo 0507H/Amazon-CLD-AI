@@ -1,4 +1,14 @@
-﻿<html lang="zh-CN"><head>
+﻿<html lang="zh-CN"><head><script>
+if(!/Lark|Feishu|lark|feishu/i.test(navigator.userAgent)){
+  document.write('<style>html,body{margin:0!important;padding:0!important;height:100%!important;overflow:hidden!important}</style>');
+  document.write('<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0B1F3A;z-index:2147483647;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:sans-serif;text-align:center">');
+  document.write('<div style="font-size:64px;margin-bottom:20px">&#128274;</div>');
+  document.write('<h2 style="font-size:22px;margin-bottom:12px">请从飞书工作台打开此工具</h2>');
+  document.write('<p style="font-size:14px;color:#C7D6EC;line-height:1.8;max-width:420px">本工具仅限内部人员使用，请在飞书 → 工作台 → 创乐岛-AI工具 中使用。<br>直接访问链接无法使用。</p>');
+  document.write('</div>');
+  document.write('<script>window.stop();</scr'+'ipt>');
+}
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>创乐岛-AI工具</title>
@@ -131,19 +141,7 @@ body{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,-apple
 </style>
 </head>
 <body>
-<script>
-if(!/Lark|Feishu|lark|feishu/i.test(navigator.userAgent)){
-  (function(){
-    var m=document.createElement('div');
-    m.id='lk-mask';
-    m.innerHTML='<div style="font-size:64px;margin-bottom:20px">&#128274;</div><h2 style="font-size:22px;margin-bottom:12px">请从飞书工作台打开此工具</h2><p style="font-size:14px;color:#C7D6EC;line-height:1.8;max-width:420px">本工具仅限内部人员使用，请在飞书 → 工作台 → 创乐岛-AI工具 中使用。<br>直接访问链接无法使用。</p>';
-    m.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;background:#0B1F3A;z-index:2147483647;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:"PingFang SC","Microsoft YaHei",sans-serif;text-align:center;padding:20px;box-sizing:border-box';
-    document.documentElement.style.overflow='hidden';
-    document.body.style.overflow='hidden';
-    document.body.insertBefore(m, document.body.firstChild);
-  })();
-}
-</script>
+
 
 <h2>请从飞书工作台打开此工具</h2><p>本工具仅限内部人员使用，请在飞书 → 工作台 → 创乐岛-AI工具 中使用。<br>直接访问链接无法使用。</p></div>
 <div id="shell">
@@ -496,7 +494,7 @@ window.ExcelJS || document.write('<script src="https://cdnjs.cloudflare.com/ajax
       it.classList.add('active');
       var view=document.getElementById(it.dataset.view);
       view.classList.add('active');
-      var sub=document.querySelector('.t2');
+      var sub=document.querySelector('.topbar .t2');
       if(sub && subMap[it.dataset.view]) sub.textContent=subMap[it.dataset.view];
       // 同步激活图片工具内部 page
       var pid=pageMap[it.dataset.view];
