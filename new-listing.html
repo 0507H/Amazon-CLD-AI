@@ -128,7 +128,7 @@ if(new URLSearchParams(location.search).get('embed')==='1'){
     <div class="card-body">
       <div class="result-bar">
         <div class="result-stats" id="resultStats"></div>
-        <button class="btn btn-blue" onclick="download()">📥 下载库存文件.xlsx</button>
+        <button class="btn btn-blue" onclick="download()">📥 下载新品上传.xlsx</button>
       </div>
       <div class="table-wrap" id="previewTable"></div>
       <div id="resultMsg"></div>
@@ -504,18 +504,14 @@ function generate() {
     `<span><b>${children.length}</b> 个子体</span><span><b>${range.e.c+1}</b> 列</span>`;
   
   document.getElementById('previewTable').innerHTML = '';
-  document.getElementById('resultMsg').innerHTML = '<div class="success-bar">✅ 生成完成，点击下载按钮获取库存文件</div>';
+  document.getElementById('resultMsg').innerHTML = '<div class="success-bar">✅ 生成完成，点击下载按钮获取新品上传文件</div>';
   
   window._wb = wb;
-  window._aoa = aoa;
 }
 
 function download() {
-  if(!window._wb || !window._aoa) return;
-  const ws = XLSX.utils.aoa_to_sheet(window._aoa);
-  window._wb.Sheets['Template'] = ws;
-  window._wb.SheetNames = ['Template'];
-  XLSX.writeFile(window._wb, 'Amazon_FlatFile_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  if(!window._wb) return;
+  XLSX.writeFile(window._wb, '新品上传_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
 </script>
