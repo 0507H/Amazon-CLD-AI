@@ -130,6 +130,16 @@ let parsedData = null;
 document.getElementById('uploadZone').onclick = () => document.getElementById('fileInput').click();
 document.getElementById('fileInput').onchange = (e) => { if(e.target.files[0]) handleFile(e.target.files[0]); };
 
+// Drag and drop
+const uz = document.getElementById('uploadZone');
+uz.addEventListener('dragover', (e) => { e.preventDefault(); uz.style.borderColor='#2F5496'; uz.style.background='#f0f4ff'; });
+uz.addEventListener('dragleave', () => { uz.style.borderColor=''; uz.style.background=''; });
+uz.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uz.style.borderColor=''; uz.style.background='';
+  if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
 function handleFile(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -176,10 +186,9 @@ function handleFile(file) {
           pkgWt: String(row[18]||'').trim(),
           isParent
         };
-        // 校验：子体行高亮和材质必填
+        // 校验：子体行亮点必填
         if(!isParent) {
           if(!item.highlight) errors.push(`子体 ${item.msku} 缺少「亮点/Title Differentiation」`);
-          if(!item.material) errors.push(`子体 ${item.msku} 缺少「材质」`);
         }
         items.push(item);
       }
