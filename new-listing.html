@@ -472,7 +472,7 @@ function generate() {
       vals[8] = brandVal;
       vals[9] = 'GTIN Exempt';
       vals[11] = pt;
-      vals[15] = (item.title||'').split(/[,|]+/)[0].trim().substring(0,40);
+      vals[15] = (item.title||'').replace(new RegExp('^'+brandVal+'\\s*', 'i'),'').split(/[,|]+/)[0].trim().substring(0,40);
       vals[16] = brandVal;
       vals[29] = item.description;
       vals[30] = item.bullet1;
