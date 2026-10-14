@@ -131,7 +131,26 @@ body{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,-apple
 </style>
 </head>
 <body>
-<div id="lk-block"><div class="ic">&#128274;</div><h2>请从飞书工作台打开此工具</h2><p>本工具仅限内部人员使用，请在飞书 → 工作台 → 创乐岛-AI工具 中使用。<br>直接访问链接无法使用。</p></div>
+<style>
+html.lk-on, html.lk-on body{overflow:hidden !important;height:100% !important;width:100% !important;margin:0 !important;padding:0 !important}
+#lk-mask{position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;background:#0B1F3A;z-index:2147483647;display:none;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:"PingFang SC","Microsoft YaHei",sans-serif;text-align:center;padding:20px;box-sizing:border-box}
+#lk-mask.show{display:flex}
+#lk-mask .ic{font-size:64px;margin-bottom:20px}
+#lk-mask h2{font-size:22px;margin-bottom:12px}
+#lk-mask p{font-size:14px;color:#C7D6EC;line-height:1.8;max-width:420px}
+</style>
+<div id="lk-mask"><div class="ic">&#128274;</div><h2>请从飞书工作台打开此工具</h2><p>本工具仅限内部人员使用，请在飞书 → 工作台 → 创乐岛-AI工具 中使用。<br>直接访问链接无法使用。</p></div>
+<script>
+if(!/Lark|Feishu|lark|feishu/i.test(navigator.userAgent)){
+  (function(){
+    document.documentElement.classList.add('lk-on');
+    var m=document.getElementById('lk-mask');
+    if(m)m.classList.add('show');
+  })();
+}
+</script>
+
+<h2>请从飞书工作台打开此工具</h2><p>本工具仅限内部人员使用，请在飞书 → 工作台 → 创乐岛-AI工具 中使用。<br>直接访问链接无法使用。</p></div>
 <div id="shell">
   <aside id="sidebar">
     <div class="brand">
@@ -149,6 +168,7 @@ body{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,-apple
       <button class="child-item direct-item" data-view="viewAwd"><span class="ic">🚚</span><span class="txt">&nbsp;AWD装箱单转换</span></button>
       <button class="child-item direct-item" data-view="viewProfit"><span class="ic">💰</span><span class="txt">&nbsp;利润测算</span></button>
       <button class="child-item direct-item" data-view="viewDateFix"><span class="ic">📅</span><span class="txt">&nbsp;批量改日期</span></button>
+      <button class="child-item direct-item" data-view="viewNewListing"><span class="ic">📋</span><span class="txt">&nbsp;新品上传 <span style="font-size:10px;background:#ff9800;color:#fff;padding:1px 5px;border-radius:6px">测试中</span></span></button>
     </nav>
     <div class="toggle-bar"><button id="btnCollapse">◀ 收起导航</button></div>
   </aside>
@@ -4795,14 +4815,8 @@ function downloadFile() {
 
   </div>
 </section>
+<section class="view" id="viewNewListing" style="padding:0;background:#f5f7fa;min-height:calc(100vh - 60px)"><iframe src="new-listing.html" style="width:100%;height:calc(100vh - 60px);border:none;display:block"></iframe></section>
 
-</main></div><script>
-if(!/Lark|Feishu|lark|feishu/i.test(navigator.userAgent)){
-  (function(){
-    document.documentElement.classList.add('lk-on');
-    var el = document.getElementById('lk-block');
-    if(el){ el.classList.add('show'); }
-  })();
-}
-</script>
+
+</main></div>
 </body></html>
