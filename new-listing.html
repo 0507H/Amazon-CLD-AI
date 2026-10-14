@@ -328,5 +328,14 @@ function download() {
   XLSX.writeFile(wb, 'Amazon_Inventory_File.xlsx');
 }
 </script>
-</body>
+<script>
+if(window.self !== window.top){
+  document.addEventListener('DOMContentLoaded', function(){
+    var h = document.querySelector('.header') || document.querySelector('header') || document.querySelector('h1');
+    if(h) h.style.display='none';
+    // Also hide any back/home link
+    document.querySelectorAll('a[href="CreativeIsland.html"], a[href="index.html"], a[href="./"]').forEach(function(a){a.style.display='none';});
+  });
+}
+</script></body>
 </html>
