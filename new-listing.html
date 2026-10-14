@@ -129,7 +129,7 @@ if(new URLSearchParams(location.search).get('embed')==='1'){
     <div class="card-body">
       <div class="result-bar">
         <div class="result-stats" id="resultStats"></div>
-        <button class="btn btn-blue" onclick="download()">📥 下载新品上传.xlsx</button>
+        <button class="btn btn-blue" onclick="download()">📥 下载新品上传文件.xlsx</button>
       </div>
       <div class="table-wrap" id="previewTable"></div>
       <div id="resultMsg"></div>
@@ -431,8 +431,10 @@ function generate() {
     let xml = new TextDecoder('utf-8').decode(xmlBuf);
     
     // Remove old data rows (row 6+ = 1-indexed)
-    const row6Idx = xml.indexOf('<row r="6"');
     const sdEndIdx = xml.indexOf('</sheetData>');
+    let row6Idx = xml.indexOf('<row r="6"');
+    if(row6Idx === -1) row6Idx = xml.indexOf('<row r="7"');
+    if(row6Idx === -1) row6Idx = sdEndIdx; // no data rows, insert before </sheetData>
     const beforeRows = xml.substring(0, row6Idx);
     const afterRows = xml.substring(sdEndIdx);
     
@@ -527,6 +529,7 @@ function generate() {
     zip.file(templatePath, outBuf);
     const out = await zip.generateAsync({type:'uint8array', compression:'DEFLATE'});
     window._outputBlob = new Blob([out.buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    console.log('File generated, size:', out.length);
     
     // Show preview
     document.getElementById('resultCard').style.display = 'block';
