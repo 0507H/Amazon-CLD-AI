@@ -167,7 +167,7 @@ uz.addEventListener('drop', (e) => {
 
 function renderPreview() {
   if(!parsedData) return;
-  const children = parsedData.filter(i=>!i.isParent);
+  const allItems = parsedData;
   const formPt = document.getElementById('ptSelect').value;
   const formMaterial = document.getElementById('material').value.trim();
   const formPkgL = document.getElementById('pkgL').value;
@@ -192,14 +192,15 @@ function renderPreview() {
     tableHtml += `<th style="padding:6px 12px;text-align:left;border-bottom:2px solid #ddd;font-weight:600;color:#2F5496">${label}</th>`;
   });
   tableHtml += '</tr>';
-  children.forEach(c => {
-    tableHtml += '<tr style="border-bottom:1px solid #eee">';
+  allItems.forEach(c => {
+    const rowBg = c.isParent ? '#fff3cd' : '#fff';
+    tableHtml += `<tr style="border-bottom:1px solid #eee">`;
     fields.forEach(([k]) => {
       const fileV = c[k] || '';
-      const fbV = fallbacks[k] || '';
-      const v = fileV || fbV;
-      const bg = v ? '#fff' : '#fff8e1';
-      tableHtml += `<td style="padding:5px 12px;border-bottom:1px solid #eee;background:${bg}" title="${v}">${v ? String(v).substring(0,30) : '<span style="color:#ff9800">—</span>'}</td>`;
+      const fbV = (k==='msku') ? '' : (fallbacks[k] || '');
+      const v = fileV || (c.isParent ? '' : fbV);
+      const bg = v ? rowBg : '#fffde7';
+      tableHtml += `<td style="padding:5px 12px;border-bottom:1px solid #eee;background:${bg};color:#222;max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${v}">${v ? String(v).substring(0,40) : '<span style="color:#ff9800">—</span>'}</td>`;
     });
     tableHtml += '</tr>';
   });
@@ -224,13 +225,14 @@ function handleFile(file) {
       if(price) document.getElementById('price').value = price;
       if(parentSku) document.getElementById('parentSku').value = parentSku;
       
-      // 解析数据行（row4=表头, row5=父体, row6+=子体）
+      // 解析数据行（row4=表头之后）
       const items = [];
       const errors = [];
       for(let r=4; r<rows.length; r++) {
         const row = rows[r];
         if(!row[1] || !String(row[1]).trim()) continue;
-        const isParent = (r===4);
+        const variantCode = String(row[0]||'').trim();
+        const isParent = variantCode.includes('父体');
         const item = {
           variantCode: String(row[0]||'').trim(),
           msku: String(row[1]||'').trim(),
