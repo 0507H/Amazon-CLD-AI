@@ -404,7 +404,7 @@ function generate() {
     row[0] = item.msku;           // A: SKU
     row[1] = pt;                   // B: Product Type
     row[2] = 'Create or Replace (Full Update)'; // C: Listing Action
-    row[3] = isSingle ? 'Parent' : 'Child'; // D: Parentage Level
+    row[3] = isSingle ? '' : 'Child'; // D: Parentage Level
     row[4] = isSingle ? '' : parentSkuVal; // E: Parent SKU
     row[5] = isSingle ? '' : 'COLOR'; // F: Variation Theme Name
     row[6] = item.title;          // G: Item Name
