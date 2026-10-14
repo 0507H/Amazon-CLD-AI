@@ -487,7 +487,8 @@ window.ExcelJS || document.write('<script src="https://cdnjs.cloudflare.com/ajax
   });
   var items=document.querySelectorAll('.child-item');
   // 视图映射：每个视图对应要激活的 #picTool 内 page
-  var pageMap={'viewPicSingle':'page-single','viewPicMulti':'page-multi','viewAdGen':null,'viewCoupon':null,'viewAwd':null,'viewProfit':null,'viewDateFix':null};
+  var pageMap={'viewPicSingle':'page-single','viewPicMulti':'page-multi','viewAdGen':null,'viewCoupon':null,'viewAwd':null,'viewProfit':null,'viewDateFix':null,'viewNewListing':null};
+  var subMap={'viewPicSingle':'图片批量转换 · 广告批量生成','viewPicMulti':'图片批量转换 · 广告批量生成','viewAdGen':'广告批量生成','viewCoupon':'Coupon生成','viewAwd':'AWD装箱单转换','viewProfit':'利润测算','viewDateFix':'批量修改开售日期','viewNewListing':'新品上传转换器'};
   items.forEach(function(it){
     it.onclick=function(){
       items.forEach(function(x){x.classList.remove('active')});
@@ -495,6 +496,8 @@ window.ExcelJS || document.write('<script src="https://cdnjs.cloudflare.com/ajax
       it.classList.add('active');
       var view=document.getElementById(it.dataset.view);
       view.classList.add('active');
+      var sub=document.querySelector('.t2');
+      if(sub && subMap[it.dataset.view]) sub.textContent=subMap[it.dataset.view];
       // 同步激活图片工具内部 page
       var pid=pageMap[it.dataset.view];
       var tools=document.querySelectorAll('#picTool');
