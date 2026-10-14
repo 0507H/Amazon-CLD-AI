@@ -201,8 +201,43 @@ function handleFile(file) {
       
       parsedData = items;
       
-      document.getElementById('fileInfo').innerHTML = 
-        `<div class="file-info"><span>✅ 已识别：${items.length} 行（${items.filter(i=>i.isParent).length}父体 + ${items.filter(i=>!i.isParent).length}子体）</span></div>`;
+      // Build preview table
+      const children = items.filter(i=>!i.isParent);
+      let previewHtml = `<div class="file-info"><span>✅ 已识别：${items.length} 行（${items.filter(i=>i.isParent).length}父体 + ${children.length}子体）</span></div>`;
+      
+      // Check missing category
+      const formPt = document.getElementById('ptSelect').value;
+      const missingCat = children.filter(c => !c.category && !formPt);
+      if(missingCat.length > 0) {
+        previewHtml += `<div class="error-bar">⚠️ ${missingCat.length} 个子体未填类目，且工具表单也未选类目：${missingCat.map(c=>c.msku).join(', ')}。请在表单中选择或在文案表C列填写。</div>`;
+      }
+      
+      // Field fill status table
+      const fields = [
+        ['msku','MSKU'], ['category','类目'], ['title','标题'], ['highlight','亮点'],
+        ['bullet1','五点1'], ['bullet2','五点2'], ['bullet3','五点3'], ['bullet4','五点4'], ['bullet5','五点5'],
+        ['description','描述'], ['st','ST关键词'], ['color','颜色'], ['material','材质'],
+        ['pkgL','包装长'], ['pkgW','包装宽'], ['pkgH','包装高'], ['pkgWt','包装重']
+      ];
+      previewHtml += '<div style="margin-top:10px;overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">';
+      previewHtml += '<tr style="background:#f5f5f5"><th style="padding:4px 8px;text-align:left;border:1px solid #ddd">MSKU</th>';
+      fields.forEach(([k,label]) => {
+        if(k==='msku') return;
+        previewHtml += `<th style="padding:4px 4px;text-align:center;border:1px solid #ddd;writing-mode:vertical-lr">${label}</th>`;
+      });
+      previewHtml += '</tr>';
+      children.forEach(c => {
+        previewHtml += `<tr><td style="padding:4px 8px;border:1px solid #ddd;font-weight:600">${c.msku}</td>`;
+        fields.forEach(([k]) => {
+          if(k==='msku') return;
+          const filled = c[k] && String(c[k]).trim();
+          previewHtml += `<td style="padding:4px;text-align:center;border:1px solid #ddd;background:${filled?'#e8f5e9':'#fff3e0'}">${filled?'✓':'—'}</td>`;
+        });
+        previewHtml += '</tr>';
+      });
+      previewHtml += '</table></div>';
+      
+      document.getElementById('fileInfo').innerHTML = previewHtml;
     } catch(err) {
       document.getElementById('fileInfo').innerHTML = `<div class="error-bar">❌ 解析失败：${err.message}</div>`;
     }
