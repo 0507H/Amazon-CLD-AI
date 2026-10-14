@@ -96,17 +96,21 @@ if(new URLSearchParams(location.search).get('embed')==='1'){
         <div style="display:flex;gap:10px;align-items:center;">
           <button class="btn btn-orange" style="padding:9px 40px;" onclick="generate()">生成上传模板</button>
           <button class="btn" style="padding:9px 20px;background:#fff;border:1px solid #ddd;color:#333;" onclick="applyToTemplate()">应用至表格</button>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#555;cursor:pointer;"><input type="checkbox" id="singleListing" onchange="toggleSingleListing()"> 单链接</label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#555;">尺寸单位：
-            <select id="dimUnit" onchange="renderPreview()" style="padding:3px 6px;border:1px solid #ddd;border-radius:4px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#555;cursor:pointer;"><input type="checkbox" id="singleListing" onchange="toggleSingleListing()" style="width:16px;height:16px;"> 单链接</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#555;">尺寸单位：
+            <select id="dimUnit" onchange="renderPreview()" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-size:14px;">
               <option value="Inches">Inch</option>
               <option value="Centimeters">CM</option>
+              <option value="Millimeters">MM</option>
+              <option value="Meters">M</option>
             </select>
           </label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#555;">重量单位：
-            <select id="wtUnit" onchange="renderPreview()" style="padding:3px 6px;border:1px solid #ddd;border-radius:4px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#555;">重量单位：
+            <select id="wtUnit" onchange="renderPreview()" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-size:14px;">
               <option value="Pounds">LB</option>
               <option value="Kilograms">KG</option>
+              <option value="Ounces">OZ</option>
+              <option value="Grams">G</option>
             </select>
           </label>
         </div>
@@ -171,11 +175,13 @@ function renderPreview() {
   const formPkgH = document.getElementById('pkgH').value;
   const formPkgWt = document.getElementById('pkgWt').value;
   
+  const dimUnitLabel = document.getElementById('dimUnit').selectedOptions[0].text;
+  const wtUnitLabel = document.getElementById('wtUnit').selectedOptions[0].text;
   const fields = [
     ['msku','MSKU'], ['category','类目'], ['title','标题'], ['highlight','亮点'],
     ['bullet1','五点1'], ['bullet2','五点2'], ['bullet3','五点3'], ['bullet4','五点4'], ['bullet5','五点5'],
     ['description','描述'], ['st','ST'], ['color','颜色'], ['material','材质'],
-    ['pkgL','长(inch)'], ['pkgW','宽(inch)'], ['pkgH','高(inch)'], ['pkgWt','重(LB)']
+    ['pkgL',`长(${dimUnitLabel})`], ['pkgW',`宽(${dimUnitLabel})`], ['pkgH',`高(${dimUnitLabel})`], ['pkgWt',`重(${wtUnitLabel})`]
   ];
   const fallbacks = { category: formPt, material: formMaterial, pkgL: formPkgL, pkgW: formPkgW, pkgH: formPkgH, pkgWt: formPkgWt };
   
