@@ -84,7 +84,8 @@ if(new URLSearchParams(location.search).get('embed')==='1'){
         <div class="form-group"><label>product_type（类目）</label><select id="ptSelect"></select></div>
         <div class="form-group"><label>品牌名</label><input id="brand"></div>
         <div class="form-group"><label>售价(USD)</label><input id="price" type="number" step="0.01"></div>
-        <div class="form-group"><label>父体MSKU</label><input id="parentSku"></div>
+        <div class="form-group"><label>父体MSKU <span id="parentSkuReq" style="color:#e53935">*</span></label><input id="parentSku"></div>
+        <div class="form-group"><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="singleListing" onchange="toggleSingleListing()"> 单链接（无父体）</label></div>
         <div class="form-group"><label>变体主题</label><select id="vTheme"><option>COLOR</option><option>SIZE</option><option>CAPACITY</option><option>PATTERN</option><option>THEME</option><option>SET_NAME</option><option>NUMBER_OF_ITEMS</option><option>无变体</option></select></div>
         <div class="form-group"><label>材质（选填）</label><input id="material"></div>
         <div class="form-group"><label>包装长(in)</label><input id="pkgL" type="number" step="0.01"></div>
@@ -126,6 +127,13 @@ const sel = document.getElementById('ptSelect');
 PT_LIST.forEach(pt => { const o=document.createElement('option'); o.value=pt; o.textContent=pt; sel.appendChild(o); });
 
 let parsedData = null;
+
+function toggleSingleListing() {
+  const isSingle = document.getElementById('singleListing').checked;
+  document.getElementById('parentSkuReq').style.display = isSingle ? 'none' : 'inline';
+  document.getElementById('parentSku').disabled = isSingle;
+  if(isSingle) document.getElementById('parentSku').value = '';
+}
 
 document.getElementById('uploadZone').onclick = () => document.getElementById('fileInput').click();
 document.getElementById('fileInput').onchange = (e) => { if(e.target.files[0]) handleFile(e.target.files[0]); };
@@ -201,15 +209,38 @@ function handleFile(file) {
       
       parsedData = items;
       
-      // Build preview table
+      // Build warnings
+      const warnings = [];
       const children = items.filter(i=>!i.isParent);
+      const isSingle = document.getElementById('singleListing').checked;
+      const formPt = document.getElementById('ptSelect').value;
+      const formBrand = document.getElementById('brand').value.trim();
+      const formPrice = document.getElementById('price').value;
+      const formParentSku = document.getElementById('parentSku').value.trim();
+      const formPkgL = document.getElementById('pkgL').value;
+      const formPkgW = document.getElementById('pkgW').value;
+      const formPkgH = document.getElementById('pkgH').value;
+      const formPkgWt = document.getElementById('pkgWt').value;
+      
+      if(!formPt) warnings.push('⚠️ 未选择产品类目，请在表单或文案表C列填写');
+      if(!formBrand) warnings.push('⚠️ 未填写品牌名，请在表单或文案表B3填写');
+      if(!formPrice) warnings.push('⚠️ 未填写售价，请在表单或文案表E3填写');
+      if(!isSingle && !formParentSku) warnings.push('⚠️ 未填写父体MSKU（如需单链接请勾选"单链接"）');
+      
+      // Check per-child: category, package dims
+      children.forEach(c => {
+        if(!c.category && !formPt) warnings.push(`⚠️ ${c.msku} 未填类目`);
+        const pL = c.pkgL || formPkgL, pW = c.pkgW || formPkgW, pH = c.pkgH || formPkgH, pWt = c.pkgWt || formPkgWt;
+        if(!pL) warnings.push(`⚠️ ${c.msku} 未填包装长`);
+        if(!pW) warnings.push(`⚠️ ${c.msku} 未填包装宽`);
+        if(!pH) warnings.push(`⚠️ ${c.msku} 未填包装高`);
+        if(!pWt) warnings.push(`⚠️ ${c.msku} 未填包装重`);
+      });
+      
       let previewHtml = `<div class="file-info"><span>✅ 已识别：${items.length} 行（${items.filter(i=>i.isParent).length}父体 + ${children.length}子体）</span></div>`;
       
-      // Check missing category
-      const formPt = document.getElementById('ptSelect').value;
-      const missingCat = children.filter(c => !c.category && !formPt);
-      if(missingCat.length > 0) {
-        previewHtml += `<div class="error-bar">⚠️ ${missingCat.length} 个子体未填类目，且工具表单也未选类目：${missingCat.map(c=>c.msku).join(', ')}。请在表单中选择或在文案表C列填写。</div>`;
+      if(warnings.length > 0) {
+        previewHtml += `<div class="error-bar">${warnings.join('<br>')}</div>`;
       }
       
       // Field fill status table
@@ -332,9 +363,13 @@ function generate() {
   const priceVal = formPrice;
   const parentSkuVal = formParentSku;
   const ptVal = formPt;
+  const isSingle = document.getElementById('singleListing').checked;
   
-  if(!brandVal || !priceVal || !parentSkuVal || !ptVal) {
-    alert('请填写：product_type、品牌、售价、父体MSKU（文案表或工具表单均可）'); return;
+  if(!brandVal || !priceVal || !ptVal) {
+    alert('请填写：product_type、品牌、售价（文案表或工具表单均可）'); return;
+  }
+  if(!isSingle && !parentSkuVal) {
+    alert('请填写父体MSKU，或勾选"单链接"'); return;
   }
   
   // Date = today + 1 year
@@ -369,9 +404,9 @@ function generate() {
     row[0] = item.msku;           // A: SKU
     row[1] = pt;                   // B: Product Type
     row[2] = 'Create or Replace (Full Update)'; // C: Listing Action
-    row[3] = 'Child';              // D: Parentage Level
-    row[4] = parentSkuVal;         // E: Parent SKU
-    row[5] = 'COLOR';              // F: Variation Theme Name
+    row[3] = isSingle ? 'Parent' : 'Child'; // D: Parentage Level
+    row[4] = isSingle ? '' : parentSkuVal; // E: Parent SKU
+    row[5] = isSingle ? '' : 'COLOR'; // F: Variation Theme Name
     row[6] = item.title;          // G: Item Name
     row[7] = item.highlight;       // H: Item Highlight
     row[8] = brandVal;             // I: Brand Name
