@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>创乐岛-AI工具</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family: -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif; background:#f0f2f5; color:#333; overflow-x:hidden; }
@@ -405,121 +406,156 @@ function generate() {
   nextYear.setFullYear(nextYear.getFullYear() + 1);
   const dateStr = nextYear.toISOString().slice(0,10);
   
-  // Decode template
-  const tplBytes = Uint8Array.from(atob(TEMPLATE_B64), c => c.charCodeAt(0));
-  const wb = XLSX.read(tplBytes, {type:'array', cellStyles:true});
-  
   // Only generate child rows (no parent row)
   const children = parsedData.filter(i => !i.isParent);
   if(children.length === 0) { alert('没有子体数据'); return; }
   
-  // Write data directly into template sheet (preserve formatting)
-  const ws = wb.Sheets['Template'];
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  // Clear old data rows (row 6+ = index 5+)
-  for(let r = 5; r <= range.e.r; r++) {
-    for(let c = 0; c <= range.e.c; c++) {
-      const cell = XLSX.utils.encode_cell({r:r, c:c});
-      if(ws[cell]) delete ws[cell];
+  // Use JSZip to directly manipulate template XML (preserves all formatting)
+  (async () => {
+    const bstr = atob(TEMPLATE_B64);
+    const bytes = new Uint8Array(bstr.length);
+    for(let i=0;i<bstr.length;i++) bytes[i] = bstr.charCodeAt(i);
+    const zip = await JSZip.loadAsync(bytes);
+    const wbXml = await zip.file('xl/workbook.xml').async('string');
+    const relsXml = await zip.file('xl/_rels/workbook.xml.rels').async('string');
+    const sheets = [...wbXml.matchAll(/<sheet[^>]*name="([^"]*)"[^>]*r:id="(rId\d+)"/g)];
+    const rels = [...relsXml.matchAll(/<Relationship[^>]*?Target="([^"]*)"[^>]*?Id="(rId\d+)"/g)];
+    let templatePath = null;
+    for(const [,name,rid] of sheets) {
+      if(name === 'Template') {
+        const rel = rels.find(r => r[2] === rid);
+        if(rel) templatePath = rel[1].replace(/^\//,'');
+      }
     }
-  }
-  // Write our data starting at row 6 (0-indexed row 5)
-  children.forEach((item, i) => {
-    const row = new Array(range.e.c + 1).fill('');
+    const xmlBuf = await zip.file(templatePath).async('arraybuffer');
+    let xml = new TextDecoder('utf-8').decode(xmlBuf);
     
-    const pt = item.category || ptVal;
-    const pkgL = item.pkgL || formPkgL;
-    const pkgW = item.pkgW || formPkgW;
-    const pkgH = item.pkgH || formPkgH;
-    const pkgWt = item.pkgWt || formPkgWt;
+    // Remove old data rows (row 6+ = 1-indexed)
+    const row6Idx = xml.indexOf('<row r="6"');
+    const sdEndIdx = xml.indexOf('</sheetData>');
+    const beforeRows = xml.substring(0, row6Idx);
+    const afterRows = xml.substring(sdEndIdx);
+    
+    // Column number to Excel letter
+    const colLetter = n => {
+      let s = '';
+      n++;
+      while(n > 0) { const m = (n-1)%26; s = String.fromCharCode(65+m)+s; n = Math.floor((n-1)/26); }
+      return s;
+    };
+    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    
     const dimUnit = document.getElementById('dimUnit').value;
     const wtUnit = document.getElementById('wtUnit').value;
+    const matVal = document.getElementById('material').value;
     
-    row[0] = item.msku;
-    row[1] = pt;
-    row[2] = 'Create or Replace (Full Update)';
-    row[3] = isSingle ? '' : 'Child';
-    row[4] = isSingle ? '' : parentSkuVal;
-    row[5] = isSingle ? '' : 'COLOR';
-    row[6] = item.title;
-    row[7] = item.highlight;
-    row[8] = brandVal;
-    row[9] = 'GTIN Exempt';
-    row[15] = item.msku;
-    row[16] = brandVal;
-    row[29] = item.description;
-    row[30] = item.bullet1;
-    row[31] = item.bullet2;
-    row[32] = item.bullet3;
-    row[33] = item.bullet4;
-    row[34] = item.bullet5;
-    row[35] = item.st;
-    row[36] = detectSpecialFeatures(item);
-    row[41] = item.color;
-    row[42] = item.material || document.getElementById('material').value;
-    row[47] = '1';
-    row[48] = '1';
-    row[51] = item.color;
-    row[58] = item.msku;
-    row[78] = dateStr;
-    row[91] = 'Clip';
-    row[100] = '1';
-    row[109] = 'New';
-    row[111] = priceVal.toFixed(2);
-    row[112] = 'A_GEN_NOTAX';
-    row[113] = dateStr;
-    row[114] = '20';
-    row[135] = 'Fulfillment by Amazon (NA)';
-    row[140] = priceVal.toFixed(2);
-    row[147] = dateStr;
-    row[166] = pkgL;
-    row[167] = dimUnit;
-    row[168] = pkgW;
-    row[169] = dimUnit;
-    row[170] = pkgH;
-    row[171] = dimUnit;
-    row[172] = pkgWt;
-    row[173] = wtUnit;
-    row[174] = 'China';
-    row[177] = 'No';
-    row[201] = 'Not Applicable';
-    row[202] = 'Not Applicable';
-    row[203] = 'Not Applicable';
-    row[204] = 'Not Applicable';
-    row[205] = 'Not Applicable';
-    
-    row.forEach((val, c) => {
-      if(val !== '') {
-        const cell = XLSX.utils.encode_cell({r: 5+i, c: c});
-        ws[cell] = {t:'s', v:String(val)};
-      }
+    let newRows = '';
+    children.forEach((item, i) => {
+      const rowNum = 6 + i;
+      const pt = item.category || ptVal;
+      const pkgL = item.pkgL || formPkgL;
+      const pkgW = item.pkgW || formPkgW;
+      const pkgH = item.pkgH || formPkgH;
+      const pkgWt = item.pkgWt || formPkgWt;
+      
+      const vals = {};
+      vals[0] = item.msku;
+      vals[1] = pt;
+      vals[2] = 'Create or Replace (Full Update)';
+      vals[3] = isSingle ? '' : 'Child';
+      vals[4] = isSingle ? '' : parentSkuVal;
+      vals[5] = isSingle ? '' : 'COLOR';
+      vals[6] = item.title;
+      vals[7] = item.highlight;
+      vals[8] = brandVal;
+      vals[9] = 'GTIN Exempt';
+      vals[15] = item.msku;
+      vals[16] = brandVal;
+      vals[29] = item.description;
+      vals[30] = item.bullet1;
+      vals[31] = item.bullet2;
+      vals[32] = item.bullet3;
+      vals[33] = item.bullet4;
+      vals[34] = item.bullet5;
+      vals[35] = item.st;
+      vals[36] = detectSpecialFeatures(item);
+      vals[41] = item.color;
+      vals[42] = item.material || matVal;
+      vals[47] = '1';
+      vals[48] = '1';
+      vals[51] = item.color;
+      vals[58] = item.msku;
+      vals[78] = dateStr;
+      vals[91] = 'Clip';
+      vals[100] = '1';
+      vals[109] = 'New';
+      vals[111] = priceVal.toFixed(2);
+      vals[112] = 'A_GEN_NOTAX';
+      vals[113] = dateStr;
+      vals[114] = '20';
+      vals[135] = 'Fulfillment by Amazon (NA)';
+      vals[140] = priceVal.toFixed(2);
+      vals[147] = dateStr;
+      vals[166] = pkgL;
+      vals[167] = dimUnit;
+      vals[168] = pkgW;
+      vals[169] = dimUnit;
+      vals[170] = pkgH;
+      vals[171] = dimUnit;
+      vals[172] = pkgWt;
+      vals[173] = wtUnit;
+      vals[174] = 'China';
+      vals[177] = 'No';
+      vals[201] = 'Not Applicable';
+      vals[202] = 'Not Applicable';
+      vals[203] = 'Not Applicable';
+      vals[204] = 'Not Applicable';
+      vals[205] = 'Not Applicable';
+      
+      newRows += '<row r="'+rowNum+'">';
+      Object.entries(vals).forEach(([c, v]) => {
+        if(v !== '' && v != null) {
+          const ref = colLetter(parseInt(c)) + rowNum;
+          newRows += '<c r="'+ref+'" t="inlineStr"><is><t>'+esc(v)+'</t></is></c>';
+        }
+      });
+      newRows += '</row>';
     });
-  });
-  // Update range
-  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:4+children.length, c:range.e.c}});
-  
-  // Show preview
-  document.getElementById('resultCard').style.display = 'block';
-  document.getElementById('resultStats').innerHTML = 
-    `<span><b>${children.length}</b> 个子体</span><span><b>${range.e.c+1}</b> 列</span>`;
-  
-  let html = '<table><thead><tr><th>SKU</th><th>Product Type</th><th>Listing Action</th><th>Parent SKU</th><th>Color</th><th>Brand</th><th>Price</th></tr></thead><tbody>';
-  children.forEach(item => {
-    const pt = item.category || document.getElementById('ptSelect').value;
-    const parentSku = isSingle ? '' : document.getElementById('parentSku').value;
-    const price = priceVal;
-    html += `<tr><td>${item.msku}</td><td>${pt}</td><td>Create or Replace</td><td>${parentSku}</td><td>${item.color||''}</td><td>${brandVal}</td><td>$${price.toFixed(2)}</td></tr>`;
-  });
-  html += '</tbody></table>';
-  document.getElementById('previewTable').innerHTML = html;
-  document.getElementById('resultMsg').innerHTML = '<div class="success-bar">✅ 生成完成，点击下载按钮获取新品上传文件</div>';
-  
-  window._wb = wb;
+    
+    xml = beforeRows + newRows + afterRows;
+    const outBuf = new TextEncoder().encode(xml);
+    zip.file(templatePath, outBuf);
+    const out = await zip.generateAsync({type:'uint8array', compression:'DEFLATE'});
+    window._outputBlob = new Blob([out.buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    
+    // Show preview
+    document.getElementById('resultCard').style.display = 'block';
+    document.getElementById('resultStats').innerHTML = 
+      `<span><b>${children.length}</b> 个子体</span><span><b>293</b> 列</span>`;
+    
+    let html = '<table><thead><tr><th>SKU</th><th>Product Type</th><th>Listing Action</th><th>Parent SKU</th><th>Color</th><th>Brand</th><th>Price</th><th>Pkg L×W×H</th><th>Weight</th></tr></thead><tbody>';
+    children.forEach(item => {
+      const pt = item.category || ptVal;
+      const pkgL = item.pkgL || formPkgL;
+      const pkgW = item.pkgW || formPkgW;
+      const pkgH = item.pkgH || formPkgH;
+      const pkgWt = item.pkgWt || formPkgWt;
+      html += `<tr><td>${item.msku}</td><td>${pt}</td><td>Create or Replace</td><td>${isSingle?'':parentSkuVal}</td><td>${item.color||''}</td><td>${brandVal}</td><td>$${priceVal.toFixed(2)}</td><td>${pkgL}×${pkgW}×${pkgH}</td><td>${pkgWt}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('previewTable').innerHTML = html;
+    document.getElementById('resultMsg').innerHTML = '<div class="success-bar">✅ 生成完成，点击下载按钮获取新品上传文件</div>';
+  })();
 }
 
 function download() {
-  if(!window._wb) return;
-  XLSX.writeFile(window._wb, 'Amazon-New Product-'+new Date().toISOString().slice(0,10)+'.xlsx');
+  if(!window._outputBlob) return;
+  const url = URL.createObjectURL(window._outputBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Amazon-New Product-'+new Date().toISOString().slice(0,10)+'.xlsx';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 </script>
