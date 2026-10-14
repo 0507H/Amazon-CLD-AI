@@ -243,26 +243,26 @@ function handleFile(file) {
         previewHtml += `<div class="error-bar">${warnings.join('<br>')}</div>`;
       }
       
-      // Field fill status table
+      // Field fill status table - spreadsheet style
       const fields = [
         ['msku','MSKU'], ['category','类目'], ['title','标题'], ['highlight','亮点'],
         ['bullet1','五点1'], ['bullet2','五点2'], ['bullet3','五点3'], ['bullet4','五点4'], ['bullet5','五点5'],
-        ['description','描述'], ['st','ST关键词'], ['color','颜色'], ['material','材质'],
-        ['pkgL','包装长'], ['pkgW','包装宽'], ['pkgH','包装高'], ['pkgWt','包装重']
+        ['description','描述'], ['st','ST'], ['color','颜色'], ['material','材质'],
+        ['pkgL','长'], ['pkgW','宽'], ['pkgH','高'], ['pkgWt','重']
       ];
-      previewHtml += '<div style="margin-top:10px;overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">';
-      previewHtml += '<tr style="background:#f5f5f5"><th style="padding:4px 8px;text-align:left;border:1px solid #ddd">MSKU</th>';
+      previewHtml += '<div style="margin-top:10px;overflow-x:auto;border:1px solid #ddd;border-radius:6px">';
+      previewHtml += '<table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap">';
+      previewHtml += '<tr style="background:#f0f4ff">';
       fields.forEach(([k,label]) => {
-        if(k==='msku') return;
-        previewHtml += `<th style="padding:4px 4px;text-align:center;border:1px solid #ddd;writing-mode:vertical-lr">${label}</th>`;
+        previewHtml += `<th style="padding:6px 12px;text-align:left;border-bottom:2px solid #ddd;font-weight:600;color:#2F5496">${label}</th>`;
       });
       previewHtml += '</tr>';
       children.forEach(c => {
-        previewHtml += `<tr><td style="padding:4px 8px;border:1px solid #ddd;font-weight:600">${c.msku}</td>`;
+        previewHtml += '<tr style="border-bottom:1px solid #eee">';
         fields.forEach(([k]) => {
-          if(k==='msku') return;
-          const filled = c[k] && String(c[k]).trim();
-          previewHtml += `<td style="padding:4px;text-align:center;border:1px solid #ddd;background:${filled?'#e8f5e9':'#fff3e0'}">${filled?'✓':'—'}</td>`;
+          const v = c[k] || '';
+          const bg = v ? '#fff' : '#fff8e1';
+          previewHtml += `<td style="padding:5px 12px;border-bottom:1px solid #eee;background:${bg}" title="${v}">${v ? String(v).substring(0,30) : '<span style="color:#ff9800">—</span>'}</td>`;
         });
         previewHtml += '</tr>';
       });
