@@ -437,6 +437,39 @@ function generate() {
     const beforeRows = xml.substring(0, rowStartIdx);
     const afterRows = xml.substring(sdEndIdx);
     
+    // Insert Model Name column (col 16 = Q) between Model Number (P) and Manufacturer (old Q)
+    // Shift all cells in rows 4 and 5 from column Q+ to R+
+    const shiftCol = (ref) => {
+      // ref like "Q4" -> extract column letters and row number
+      const m = ref.match(/^([A-Z]+)(\d+)$/);
+      if(!m) return ref;
+      let col = 0;
+      for(const ch of m[1]) col = col*26 + (ch.charCodeAt(0)-64);
+      if(col >= 17) col++; // shift Q(17) and later
+      let s = '';
+      let n = col;
+      while(n > 0) { const r = (n-1)%26; s = String.fromCharCode(65+r)+s; n = Math.floor((n-1)/26); }
+      return s + m[2];
+    };
+    
+    let modifiedBefore = beforeRows;
+    // Shift cells in row 4 and row 5
+    for(const rowNum of [4, 5]) {
+      const rowRegex = new RegExp('(<row r="'+rowNum+'"[^>]*>)([\\s\\S]*?)(</row>)');
+      const match = modifiedBefore.match(rowRegex);
+      if(match) {
+        let cells = match[2];
+        // Shift cell references r="XXn" where column >= Q
+        cells = cells.replace(/r="([A-Z]+\d+)"/g, (m2, ref) => {
+          return 'r="' + shiftCol(ref) + '"';
+        });
+        // Insert new cell at Q(rowNum)
+        const headerText = rowNum === 4 ? 'Model Name' : 'model_name[marketplace_id=ATVPDKIKX0DER]#1.value';
+        const newCell = '<c r="Q'+rowNum+'" t="inlineStr"><is><t>'+headerText+'</t></is></c>';
+        modifiedBefore = modifiedBefore.replace(match[0], match[1] + cells + newCell + match[3]);
+      }
+    }
+    
     // Column number to Excel letter
     const colLetter = n => {
       let s = '';
@@ -471,53 +504,53 @@ function generate() {
       vals[8] = brandVal;
       vals[9] = 'GTIN Exempt';
       vals[11] = pt;
-      vals[15] = item.msku;
-      vals[16] = brandVal;
-      vals[19] = item.msku;
-      vals[29] = item.description;
-      vals[30] = item.bullet1;
-      vals[31] = item.bullet2;
-      vals[32] = item.bullet3;
-      vals[33] = item.bullet4;
-      vals[34] = item.bullet5;
-      vals[35] = item.st;
-      vals[36] = detectSpecialFeatures(item);
-      vals[41] = item.color;
-      vals[42] = item.material || matVal;
-      vals[47] = 1;
-      vals[48] = 1;
-      vals[51] = item.color;
-      vals[58] = item.msku;
-      vals[78] = dateStr;
-      vals[91] = 'Clip';
-      vals[96] = pkgL;
-      vals[97] = dimUnit;
-      vals[98] = pkgW;
-      vals[99] = dimUnit;
-      vals[100] = 1;
-      vals[109] = 'New';
-      vals[111] = Number(priceVal.toFixed(2));
-      vals[112] = 'A_GEN_NOTAX';
-      vals[113] = dateStr;
-      vals[114] = 20;
-      vals[135] = 'Fulfillment by Amazon (NA)';
-      vals[140] = Number(priceVal.toFixed(2));
-      vals[147] = dateStr;
-      vals[166] = pkgL;
-      vals[167] = dimUnit;
-      vals[168] = pkgW;
-      vals[169] = dimUnit;
-      vals[170] = pkgH;
-      vals[171] = dimUnit;
-      vals[172] = pkgWt;
-      vals[173] = wtUnit;
-      vals[174] = 'China';
-      vals[177] = 'No';
-      vals[201] = 'Not Applicable';
-      vals[202] = 'Not Applicable';
-      vals[203] = 'Not Applicable';
-      vals[204] = 'Not Applicable';
-      vals[205] = 'Not Applicable';
+      vals[15] = item.msku;       // Model Number
+      vals[16] = item.msku;       // Model Name (new, right after Model Number)
+      vals[17] = brandVal;        // Manufacturer (was 16)
+      vals[30] = item.description; // was 29
+      vals[31] = item.bullet1;
+      vals[32] = item.bullet2;
+      vals[33] = item.bullet3;
+      vals[34] = item.bullet4;
+      vals[35] = item.bullet5;
+      vals[36] = item.st;
+      vals[37] = detectSpecialFeatures(item);
+      vals[42] = item.color;       // was 41 (Style)
+      vals[43] = item.material || matVal; // was 42
+      vals[48] = 1;                // was 47
+      vals[49] = 1;                // was 48
+      vals[52] = item.color;       // was 51
+      vals[59] = item.msku;        // was 58
+      vals[79] = dateStr;          // was 78
+      vals[92] = 'Clip';           // was 91
+      vals[97] = pkgL;             // was 96
+      vals[98] = dimUnit;          // was 97
+      vals[99] = pkgW;             // was 98
+      vals[100] = dimUnit;         // was 99
+      vals[101] = 1;               // was 100
+      vals[110] = 'New';           // was 109
+      vals[112] = Number(priceVal.toFixed(2)); // was 111
+      vals[113] = 'A_GEN_NOTAX';   // was 112
+      vals[114] = dateStr;         // was 113
+      vals[115] = 20;              // was 114
+      vals[136] = 'Fulfillment by Amazon (NA)'; // was 135
+      vals[141] = Number(priceVal.toFixed(2)); // was 140
+      vals[148] = dateStr;         // was 147
+      vals[167] = pkgL;            // was 166
+      vals[168] = dimUnit;         // was 167
+      vals[169] = pkgW;            // was 168
+      vals[170] = dimUnit;         // was 169
+      vals[171] = pkgH;            // was 170
+      vals[172] = dimUnit;         // was 171
+      vals[173] = pkgWt;           // was 172
+      vals[174] = wtUnit;          // was 173
+      vals[175] = 'China';         // was 174
+      vals[178] = 'No';            // was 177
+      vals[202] = 'Not Applicable'; // was 201
+      vals[203] = 'Not Applicable'; // was 202
+      vals[204] = 'Not Applicable'; // was 203
+      vals[205] = 'Not Applicable'; // was 204
+      vals[206] = 'Not Applicable'; // was 205
       
       newRows += '<row r="'+rowNum+'">';
       Object.entries(vals).forEach(([c, v]) => {
@@ -533,7 +566,7 @@ function generate() {
       newRows += '</row>';
     });
     
-    xml = beforeRows + newRows + afterRows;
+    xml = modifiedBefore + newRows + afterRows;
     const outBuf = new TextEncoder().encode(xml);
     zip.file(templatePath, outBuf);
     const out = await zip.generateAsync({type:'uint8array', compression:'DEFLATE'});
