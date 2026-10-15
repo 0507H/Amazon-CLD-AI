@@ -484,8 +484,8 @@ function generate() {
       vals[36] = detectSpecialFeatures(item);
       vals[41] = item.color;
       vals[42] = item.material || matVal;
-      vals[47] = '1';
-      vals[48] = '1';
+      vals[47] = 1;
+      vals[48] = 1;
       vals[51] = item.color;
       vals[58] = item.msku;
       vals[78] = dateStr;
@@ -494,14 +494,14 @@ function generate() {
       vals[97] = dimUnit;
       vals[98] = pkgW;
       vals[99] = dimUnit;
-      vals[100] = '1';
+      vals[100] = 1;
       vals[109] = 'New';
-      vals[111] = priceVal.toFixed(2);
+      vals[111] = Number(priceVal.toFixed(2));
       vals[112] = 'A_GEN_NOTAX';
       vals[113] = dateStr;
-      vals[114] = '20';
+      vals[114] = 20;
       vals[135] = 'Fulfillment by Amazon (NA)';
-      vals[140] = priceVal.toFixed(2);
+      vals[140] = Number(priceVal.toFixed(2));
       vals[147] = dateStr;
       vals[166] = pkgL;
       vals[167] = dimUnit;
@@ -523,7 +523,11 @@ function generate() {
       Object.entries(vals).forEach(([c, v]) => {
         if(v !== '' && v != null) {
           const ref = colLetter(parseInt(c)) + rowNum;
-          newRows += '<c r="'+ref+'" t="inlineStr"><is><t>'+esc(v)+'</t></is></c>';
+          if(typeof v === 'number' || /^\d+(\.\d+)?$/.test(String(v))) {
+            newRows += '<c r="'+ref+'" t="n"><v>'+v+'</v></c>';
+          } else {
+            newRows += '<c r="'+ref+'" t="inlineStr"><is><t>'+esc(v)+'</t></is></c>';
+          }
         }
       });
       newRows += '</row>';
