@@ -453,19 +453,18 @@ function generate() {
     };
     
     let modifiedBefore = beforeRows;
-    // Shift cells in row 4 and row 5
-    for(const rowNum of [4, 5]) {
+    // Shift cells in rows 3, 4 and 5 from column Q(17) onwards
+    for(const rowNum of [3, 4, 5]) {
       const rowRegex = new RegExp('(<row r="'+rowNum+'"[^>]*>)([\\s\\S]*?)(</row>)');
       const match = modifiedBefore.match(rowRegex);
       if(match) {
         let cells = match[2];
-        // Shift cell references r="XXn" where column >= Q
         cells = cells.replace(/r="([A-Z]+\d+)"/g, (m2, ref) => {
           return 'r="' + shiftCol(ref) + '"';
         });
-        // Insert new cell at Q(rowNum)
-        const headerText = rowNum === 4 ? 'Model Name' : 'model_name[marketplace_id=ATVPDKIKX0DER]#1.value';
-        const newCell = '<c r="Q'+rowNum+'" t="inlineStr"><is><t>'+headerText+'</t></is></c>';
+        let newCell = '';
+        if(rowNum === 4) newCell = '<c r="Q4" t="inlineStr"><is><t>Model Name</t></is></c>';
+        if(rowNum === 5) newCell = '<c r="Q5" t="inlineStr"><is><t>model_name[marketplace_id=ATVPDKIKX0DER]#1.value</t></is></c>';
         modifiedBefore = modifiedBefore.replace(match[0], match[1] + cells + newCell + match[3]);
       }
     }
