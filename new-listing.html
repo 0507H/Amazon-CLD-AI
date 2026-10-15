@@ -430,12 +430,11 @@ function generate() {
     const xmlBuf = await zip.file(templatePath).async('arraybuffer');
     let xml = new TextDecoder('utf-8').decode(xmlBuf);
     
-    // Remove old data rows (row 6+ = 1-indexed)
+    // Remove old data rows (row 7+ = 1-indexed, keep row 6 as sample)
     const sdEndIdx = xml.indexOf('</sheetData>');
-    let row6Idx = xml.indexOf('<row r="6"');
-    if(row6Idx === -1) row6Idx = xml.indexOf('<row r="7"');
-    if(row6Idx === -1) row6Idx = sdEndIdx; // no data rows, insert before </sheetData>
-    const beforeRows = xml.substring(0, row6Idx);
+    let rowStartIdx = xml.indexOf('<row r="7"');
+    if(rowStartIdx === -1) rowStartIdx = sdEndIdx;
+    const beforeRows = xml.substring(0, rowStartIdx);
     const afterRows = xml.substring(sdEndIdx);
     
     // Column number to Excel letter
@@ -453,7 +452,7 @@ function generate() {
     
     let newRows = '';
     children.forEach((item, i) => {
-      const rowNum = 6 + i;
+      const rowNum = 7 + i;
       const pt = item.category || ptVal;
       const pkgL = item.pkgL || formPkgL;
       const pkgW = item.pkgW || formPkgW;
