@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工具使用教程</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif; background:#f5f7fa; color:#333; display:flex; min-height:100vh; }
+
+/* 左侧目录 */
+.toc { width:240px; background:#16212e; color:#fff; flex-shrink:0; padding:20px 0; position:sticky; top:0; height:100vh; overflow-y:auto; }
+.toc-title { font-size:16px; font-weight:700; padding:0 20px 16px; border-bottom:1px solid rgba(255,255,255,.1); margin-bottom:10px; }
+.toc a { display:block; padding:8px 20px; color:#9aa7b8; text-decoration:none; font-size:13px; transition:all .15s; }
+.toc a:hover { color:#fff; background:rgba(255,255,255,.06); }
+.toc a.active { color:#ffaa22; background:rgba(255,153,0,.12); border-right:3px solid #ffaa22; }
+.toc .toc-group { font-size:11px; color:#5a6a7e; padding:12px 20px 4px; text-transform:uppercase; letter-spacing:1px; }
+
+/* 右侧内容 */
+.content { flex:1; max-width:900px; margin:0 auto; padding:40px 48px; }
+h1 { font-size:28px; font-weight:800; color:#1a1a2e; margin-bottom:8px; }
+.subtitle { color:#666; font-size:14px; margin-bottom:40px; }
+h2 { font-size:22px; font-weight:700; color:#1a1a2e; margin:48px 0 16px; padding-bottom:8px; border-bottom:2px solid #e8ecf1; }
+h3 { font-size:16px; font-weight:600; color:#333; margin:24px 0 10px; }
+p { font-size:14px; line-height:1.8; color:#444; margin-bottom:12px; }
+.step { background:#fff; border-radius:8px; padding:20px 24px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+.step-num { display:inline-flex; width:24px; height:24px; background:#1976d2; color:#fff; border-radius:50%; align-items:center; justify-content:center; font-size:13px; font-weight:700; margin-right:8px; }
+.step-title { font-size:15px; font-weight:600; margin-bottom:8px; }
+.screenshot { width:100%; border:1px solid #e0e4ea; border-radius:6px; margin:12px 0; background:#f8f9fb; display:flex; align-items:center; justify-content:center; min-height:200px; color:#aaa; font-size:13px; }
+.tip { background:#e8f4fd; border-left:4px solid #1976d2; padding:10px 16px; border-radius:0 6px 6px 0; font-size:13px; margin:12px 0; color:#1565c0; }
+.warn { background:#fff3e0; border-left:4px solid #ff9800; padding:10px 16px; border-radius:0 6px 6px 0; font-size:13px; margin:12px 0; color:#e65100; }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+  <div class="toc-title">📖 使用教程</div>
+  <div class="toc-group">入门</div>
+  <a href="#intro" class="active">工具概览</a>
+  <div class="toc-group">工具教程</div>
+  <a href="#new-listing">新品上传转换器</a>
+  <a href="#profit">利润测算</a>
+  <a href="#date-fix">批量改日期</a>
+  <a href="#pic-single">单ASIN批量打包</a>
+  <a href="#pic-multi">多ASIN分组打包</a>
+  <a href="#ad-gen">批量广告工具</a>
+  <a href="#coupon">批量Coupon生成</a>
+  <a href="#awd">AWD装箱单转换</a>
+</nav>
+
+<main class="content">
+  <h1>工具使用教程</h1>
+  <p class="subtitle">点击左侧目录跳转，每个工具都有图文操作步骤说明</p>
+
+  <!-- ====== 工具概览 ====== -->
+  <h2 id="intro">工具概览</h2>
+  <p>创乐岛AI工具集涵盖亚马逊运营日常工作中的图片处理、新品上传、广告批量生成等场景。所有工具均在本地浏览器运行，文件不上传服务器。</p>
+  <div class="tip">💡 建议：每个工具第一次使用前先看一遍对应教程，了解必填项和注意事项。</div>
+
+  <!-- ====== 新品上传 ====== -->
+  <h2 id="new-listing">新品上传转换器</h2>
+  <p>根据文案编写表一键生成Amazon后台新品上传flat-file，支持US和DE站点。</p>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>选择站点</div>
+    <p>在尺寸单位左边选择US或DE站点，切换后尺寸单位和价格标签会自动调整。</p>
+    <div class="screenshot">[截图位置]</div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">2</span>上传文案编写表</div>
+    <p>下载填写模板，按格式填写后上传。文案表中品牌、售价、父体MSKU会自动填入表单。</p>
+    <div class="screenshot">[截图位置]</div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">3</span>确认公共参数</div>
+    <p>检查Product Type、品牌名、售价、包装尺寸等，缺漏项会黄色高亮提示。</p>
+    <div class="screenshot">[截图位置]</div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">4</span>生成并下载</div>
+    <p>点击"生成上传模板"，预览确认无误后点击"下载新品上传文件"，直接上传Amazon后台。</p>
+    <div class="screenshot">[截图位置]</div>
+  </div>
+
+  <!-- ====== 利润测算 ====== -->
+  <h2 id="profit">利润测算</h2>
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>填写产品信息</div>
+    <p>[步骤说明待补充]</p>
+    <div class="screenshot">[截图位置]</div>
+  </div>
+
+  <!-- ====== 批量改日期 ====== -->
+  <h2 id="date-fix">批量改日期</h2>
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>上传文件并设置新日期</div>
+    <p>[步骤说明待补充]</p>
+    <div class="screenshot">[截图位置]</div>
+  </div>
+
+  <!-- ====== 单ASIN批量打包 ====== -->
+  <h2 id="pic-single">单ASIN批量打包</h2>
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>选择商品文件夹</div>
+    <p>[步骤说明待补充]</p>
+    <div class="screenshot">[截图位置]</div>
+  </div>
+
+  <!-- ====== 多ASIN分组打包 ====== -->
+  <h2 id="pic-multi">多ASIN分组打包</h2>
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>多选文件夹批量分组</div>
+    <p>[步骤说明待补充]</p>
+    <div class="screenshot">[截图位置]</div>
+  </div>
+
+  <!-- ====== 批量广告工具 ====== -->
+  <h2 id="ad-gen">批量广告工具</h2>
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>上传输入模板</div>
+    <p>[步骤说明待补充]</p>
+    <div class="screenshot">[截图位置]</div>
+  </div>
+
+  <!-- ====== 批量Coupon ====== -->
+  <h2 id="coupon">批量Coupon生成</h2>
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>上传SKU列表</div>
+    <p>[步骤说明待补充]</p>
+    <div class="screenshot">[截图位置]</div>
+  </div>
+
+  <!-- ====== AWD装箱单 ====== -->
+  <h2 id="awd">AWD装箱单转换</h2>
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>上传装箱单文件</div>
+    <p>[步骤说明待补充]</p>
+    <div class="screenshot">[截图位置]</div>
+  </div>
+
+</main>
+
+<script>
+// 目录点击高亮
+const links = document.querySelectorAll('.toc a');
+links.forEach(a => {
+  a.addEventListener('click', e => {
+    links.forEach(l => l.classList.remove('active'));
+    a.classList.add('active');
+  });
+});
+</script>
+<script>
+if(new URLSearchParams(location.search).get('embed')==='1'){
+  document.title='工具使用教程';
+}
+</script>
+</body>
+</html>
