@@ -535,7 +535,9 @@ function generate() {
   const D = cfg.defaults;
   
   // Use JSZip to directly manipulate template XML (preserves all formatting)
+  console.log('generate called, site:', site, 'cfg:', cfg.sheetName);
   (async () => {
+   try {
     const tplB64 = eval(cfg.templateB64);
     const bstr = atob(tplB64);
     const bytes = new Uint8Array(bstr.length);
@@ -684,6 +686,10 @@ function generate() {
     html += '</tbody></table>';
     document.getElementById('previewTable').innerHTML = html;
     document.getElementById('resultMsg').innerHTML = '<div class="success-bar">✅ 生成完成，点击下载按钮获取新品上传文件</div>';
+   } catch(e) {
+     console.error('Generate error:', e);
+     alert('生成失败: ' + e.message + '\n' + e.stack);
+   }
   })();
 }
 
