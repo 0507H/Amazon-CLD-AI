@@ -90,10 +90,10 @@ if(new URLSearchParams(location.search).get('embed')==='1'){
         <div class="form-group"><label>父体MSKU <span id="parentSkuReq" style="color:#e53935">*</span></label><input id="parentSku"></div>
         <div class="form-group"><label>变体主题</label><select id="vTheme"><option>COLOR</option><option>SIZE</option><option>CAPACITY</option><option>PATTERN</option><option>THEME</option><option>SET_NAME</option><option>NUMBER_OF_ITEMS</option><option>无变体</option></select></div>
         <div class="form-group"><label>材质（选填）</label><input id="material"></div>
-        <div class="form-group"><label>包装长(in)</label><input id="pkgL" type="number" step="0.01"></div>
-        <div class="form-group"><label>包装宽(in)</label><input id="pkgW" type="number" step="0.01"></div>
-        <div class="form-group"><label>包装高(in)</label><input id="pkgH" type="number" step="0.01"></div>
-        <div class="form-group"><label>包装重量(lb)</label><input id="pkgWt" type="number" step="0.01"></div>
+        <div class="form-group"><label id="lblPkgL">包装长(in)</label><input id="pkgL" type="number" step="0.01"></div>
+        <div class="form-group"><label id="lblPkgW">包装宽(in)</label><input id="pkgW" type="number" step="0.01"></div>
+        <div class="form-group"><label id="lblPkgH">包装高(in)</label><input id="pkgH" type="number" step="0.01"></div>
+        <div class="form-group"><label id="lblPkgWt">包装重量(lb)</label><input id="pkgWt" type="number" step="0.01"></div>
       </div>
       <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center;">
         <div style="display:flex;gap:10px;align-items:center;">
@@ -228,7 +228,6 @@ const SITE_CONFIG = {
 
 function onSiteChange() {
   const site = document.getElementById('siteSel').value;
-  const cfg = SITE_CONFIG[site];
   // Update price label
   document.getElementById('priceLabel').textContent = site === 'DE' ? '售价(EUR)' : '售价(USD)';
   // Update dimension units
@@ -240,6 +239,25 @@ function onSiteChange() {
   } else {
     dimSel.value = 'Inches';
     wtSel.value = 'Pounds';
+  }
+  // Update package labels
+  const dimLbl = dimSel.selectedOptions[0].text;
+  const wtLbl = wtSel.selectedOptions[0].text;
+  document.getElementById('lblPkgL').textContent = '包装长(' + dimLbl + ')';
+  document.getElementById('lblPkgW').textContent = '包装宽(' + dimLbl + ')';
+  document.getElementById('lblPkgH').textContent = '包装高(' + dimLbl + ')';
+  document.getElementById('lblPkgWt').textContent = '包装重量(' + wtLbl + ')';
+  // Update vTheme options
+  const vSel = document.getElementById('vTheme');
+  vSel.innerHTML = '';
+  if (site === 'DE') {
+    ['FARBE','GRÖSSE','FARBE/GRÖSSE','COLOR/SET_NAME','无变体'].forEach(v => {
+      const o = document.createElement('option'); o.value=v; o.textContent=v; vSel.appendChild(o);
+    });
+  } else {
+    ['COLOR','SIZE','CAPACITY','PATTERN','THEME','SET_NAME','NUMBER_OF_ITEMS','无变体'].forEach(v => {
+      const o = document.createElement('option'); o.value=v; o.textContent=v; vSel.appendChild(o);
+    });
   }
   renderPreview();
 }
@@ -577,7 +595,9 @@ function generate() {
       vals[C.action] = D.action;
       vals[C.parentage] = isSingle ? '' : D.parentage;
       vals[C.parentSku] = isSingle ? '' : parentSkuVal;
-      vals[C.vTheme] = isSingle ? '' : D.vTheme;
+      const selVTheme = document.getElementById('vTheme').value;
+      const vThemeVal = (selVTheme === '无变体') ? '' : selVTheme;
+      vals[C.vTheme] = isSingle ? '' : vThemeVal;
       vals[C.title] = item.title;
       vals[C.highlight] = item.highlight;
       vals[C.brand] = brandVal;
