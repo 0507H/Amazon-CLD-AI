@@ -544,6 +544,7 @@ function keywordDetect(filename){
   if(fn.includes('画板') && fn.includes('1')) return 'MAIN';
   
   // 2. PT强特征（优先级高于弱MAIN特征）
+  if(fn.includes('GPSR') || fn.includes('gpsr')) return 'PS01';
   if(fn.includes('尺寸') || fn.includes('size')) return 'PT01';
   if(fn.includes('场景') || fn.includes('scene')) return 'PT02';
   if(fn.includes('细节') || fn.includes('detail')) return 'PT03';
