@@ -524,7 +524,6 @@ function detectSpecialFeatures(item) {
 }
 
 function generate() {
- try {
   if(!parsedData) { alert('请先上传文案表'); return; }
   
   // 文案表优先，工具表单兜底
@@ -725,10 +724,6 @@ function generate() {
      alert('生成失败: ' + e.message + '\n' + e.stack);
    }
   })();
- } catch(e) {
-   console.error('Generate sync error:', e);
-   alert('生成失败: ' + e.message);
- }
 }
 
 function download() {
