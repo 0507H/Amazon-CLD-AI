@@ -343,10 +343,11 @@ function handleFile(file) {
       if(brand) document.getElementById('brand').value = brand;
       if(price) document.getElementById('price').value = price;
       if(parentSku) document.getElementById('parentSku').value = parentSku;
-      
+
       // 解析数据行（row4=表头之后）
       const items = [];
       const errors = [];
+      let parentMskuFromRow = '';
       for(let r=4; r<rows.length; r++) {
         const row = rows[r];
         if(!row[1] || !String(row[1]).trim()) continue;
@@ -374,6 +375,7 @@ function handleFile(file) {
           pkgWt: String(row[18]||'').trim(),
           isParent
         };
+        if(isParent) parentMskuFromRow = item.msku;
         // 校验：子体行亮点必填
         if(!isParent) {
           if(!item.highlight) errors.push(`子体 ${item.msku} 缺少「亮点/Title Differentiation」`);
@@ -388,6 +390,10 @@ function handleFile(file) {
       }
       
       parsedData = items;
+      // Auto-fill parent MSKU from parent row if H3 is empty
+      if(parentMskuFromRow && !document.getElementById('parentSku').value.trim()) {
+        document.getElementById('parentSku').value = parentMskuFromRow;
+      }
       validateAndWarn();
       renderPreview();
     } catch(err) {
