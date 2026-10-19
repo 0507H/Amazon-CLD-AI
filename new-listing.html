@@ -394,6 +394,22 @@ function handleFile(file) {
       if(parentMskuFromRow && !document.getElementById('parentSku').value.trim()) {
         document.getElementById('parentSku').value = parentMskuFromRow;
       }
+      // Auto-fill Product Type from child rows
+      const firstChild = items.find(i=>!i.isParent);
+      if(firstChild) {
+        if(firstChild.category && !document.getElementById('ptSelect').value.trim()) {
+          document.getElementById('ptSelect').value = firstChild.category;
+        }
+        if(firstChild.material && !document.getElementById('material').value.trim()) {
+          document.getElementById('material').value = firstChild.material;
+        }
+        if(firstChild.pkgL && !document.getElementById('pkgL').value.trim()) {
+          document.getElementById('pkgL').value = firstChild.pkgL;
+          document.getElementById('pkgW').value = firstChild.pkgW;
+          document.getElementById('pkgH').value = firstChild.pkgH;
+          document.getElementById('pkgWt').value = firstChild.pkgWt;
+        }
+      }
       validateAndWarn();
       renderPreview();
     } catch(err) {
