@@ -524,6 +524,7 @@ function detectSpecialFeatures(item) {
 }
 
 function generate() {
+ try {
   if(!parsedData) { alert('请先上传文案表'); return; }
   
   // 文案表优先，工具表单兜底
@@ -571,7 +572,6 @@ function generate() {
   // Use JSZip to directly manipulate template XML (preserves all formatting)
   console.log('generate called, site:', site, 'cfg:', cfg.sheetName);
   (async () => {
-   try {
     const tplB64 = eval(cfg.templateB64);
     const bstr = atob(tplB64);
     const bytes = new Uint8Array(bstr.length);
@@ -725,6 +725,10 @@ function generate() {
      alert('生成失败: ' + e.message + '\n' + e.stack);
    }
   })();
+ } catch(e) {
+   console.error('Generate sync error:', e);
+   alert('生成失败: ' + e.message);
+ }
 }
 
 function download() {
