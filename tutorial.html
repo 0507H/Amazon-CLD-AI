@@ -6,17 +6,19 @@
 <title>工具使用教程</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif; background:#f5f7fa; color:#333; }
-.topnav { position:sticky; top:0; background:#fff; border-bottom:1px solid #e8ecf1; padding:12px 24px; display:flex; gap:16px; overflow-x:auto; z-index:10; }
-.topnav a { color:#666; text-decoration:none; font-size:13px; white-space:nowrap; padding:4px 10px; border-radius:4px; }
-.topnav a:hover { background:#f0f4ff; color:#1976d2; }
-.topnav a.active { background:#e8f4fd; color:#1976d2; font-weight:600; }
-.wrap { max-width:860px; margin:0 auto; padding:32px 24px; }
-h1 { font-size:24px; font-weight:800; color:#1a1a2e; margin-bottom:6px; }
-.subtitle { color:#888; font-size:13px; margin-bottom:32px; }
-h2 { font-size:20px; font-weight:700; color:#1a1a2e; margin:40px 0 14px; padding-bottom:8px; border-bottom:2px solid #e8ecf1; }
+html,body { height:100%; overflow:hidden; font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif; background:#f5f7fa; color:#333; }
+.wrap { display:flex; height:100vh; }
+.toc { width:200px; background:#fff; border-right:1px solid #e8ecf1; flex-shrink:0; overflow-y:auto; padding:16px 0; }
+.toc-title { font-size:14px; font-weight:700; color:#1a1a2e; padding:0 16px 12px; border-bottom:1px solid #eef1f5; margin-bottom:8px; }
+.toc a { display:block; padding:7px 16px; color:#666; text-decoration:none; font-size:13px; border-left:3px solid transparent; }
+.toc a:hover { background:#f5f7fa; }
+.toc a.active { color:#1976d2; border-left-color:#1976d2; background:#e8f4fd; font-weight:600; }
+.content { flex:1; overflow-y:auto; padding:28px 36px; }
+h1 { font-size:22px; font-weight:800; color:#1a1a2e; margin-bottom:4px; }
+.subtitle { color:#999; font-size:12px; margin-bottom:28px; }
+h2 { font-size:18px; font-weight:700; color:#1a1a2e; margin:36px 0 12px; padding-bottom:6px; border-bottom:2px solid #e8ecf1; }
 p { font-size:14px; line-height:1.8; color:#444; margin-bottom:10px; }
-.step { background:#fff; border-radius:8px; padding:18px 22px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+.step { background:#fff; border-radius:8px; padding:16px 20px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
 .step-num { display:inline-flex; width:22px; height:22px; background:#1976d2; color:#fff; border-radius:50%; align-items:center; justify-content:center; font-size:12px; font-weight:700; margin-right:6px; }
 .step-title { font-size:14px; font-weight:600; margin-bottom:6px; }
 .step img { width:100%; border:1px solid #e0e4ea; border-radius:6px; margin:10px 0; }
@@ -25,19 +27,21 @@ p { font-size:14px; line-height:1.8; color:#444; margin-bottom:10px; }
 </style>
 </head>
 <body>
-<nav class="topnav">
-  <a href="#pic-single">单ASIN打包</a>
+<div class="wrap">
+<nav class="toc">
+  <div class="toc-title">📖 使用教程</div>
+  <a href="#pic-single">单ASIN批量打包</a>
   <a href="#pic-multi" class="active">多ASIN分组打包</a>
-  <a href="#ad-gen">批量广告</a>
-  <a href="#coupon">Coupon生成</a>
-  <a href="#awd">AWD装箱单</a>
+  <a href="#ad-gen">批量广告工具</a>
+  <a href="#coupon">批量Coupon生成</a>
+  <a href="#awd">AWD装箱单转换</a>
   <a href="#profit">利润测算</a>
   <a href="#date-fix">批量改日期</a>
-  <a href="#new-listing">新品上传</a>
+  <a href="#new-listing">新品上传转换器</a>
 </nav>
-<div class="wrap">
+<div class="content">
   <h1>工具使用教程</h1>
-  <p class="subtitle">点击顶部导航快速跳转</p>
+  <p class="subtitle">点击左侧目录跳转</p>
 
   <h2 id="pic-single">单ASIN批量打包</h2>
   <p>[待补充]</p>
@@ -91,8 +95,9 @@ p { font-size:14px; line-height:1.8; color:#444; margin-bottom:10px; }
   <h2 id="new-listing">新品上传转换器</h2>
   <p>[待补充]</p>
 </div>
+</div>
 <script>
-const links=document.querySelectorAll('.topnav a');
+const links=document.querySelectorAll('.toc a');
 links.forEach(a=>a.addEventListener('click',()=>{links.forEach(l=>l.classList.remove('active'));a.classList.add('active');}));
 </script>
 </body>
