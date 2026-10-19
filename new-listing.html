@@ -63,6 +63,7 @@ if(new URLSearchParams(location.search).get('embed')==='1'){
 }
 </script></head>
 <body>
+<div id="loadingOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f7fa;z-index:9999;display:flex;align-items:center;justify-content:center;font-size:18px;color:#666;">⏳ 正在加载工具，请稍候...</div>
 <div class="tool-header"><div class="icon">📝</div><div style="display:flex;align-items:baseline;gap:10px;"><div class="title">新品上传转换器</div><div class="subtitle">本地运行 · 根据文案编写表生成Amazon后台新品上传文件</div></div></div>
 <div class="container">
 
@@ -571,6 +572,7 @@ function generate() {
   // Use JSZip to directly manipulate template XML (preserves all formatting)
   console.log('generate called, site:', site, 'cfg:', cfg.sheetName);
   (async () => {
+   try {
     const tplB64 = eval(cfg.templateB64);
     const bstr = atob(tplB64);
     const bytes = new Uint8Array(bstr.length);
@@ -736,7 +738,7 @@ function download() {
   a.click();
   URL.revokeObjectURL(url);
 }
-
+document.getElementById('loadingOverlay').style.display='none';
 </script>
 <script>
 if(window.self !== window.top){
