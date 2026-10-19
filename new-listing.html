@@ -434,9 +434,21 @@ function validateAndWarn() {
 
 function clearFile() {
   parsedData = null;
+  window._outputBlob = null;
   document.getElementById('fileInfo').innerHTML = '';
   document.getElementById('filePreview').innerHTML = '';
   document.getElementById('fileInput').value = '';
+  // Clear form fields
+  ['ptSelect','brand','price','parentSku','material','pkgL','pkgW','pkgH','pkgWt'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  document.getElementById('singleListing').checked = false;
+  // Hide result card
+  const rc = document.getElementById('resultCard');
+  if(rc) rc.style.display = 'none';
+  document.getElementById('previewTable').innerHTML = '';
+  document.getElementById('resultMsg').innerHTML = '';
 }
 
 function applyToTemplate() {
