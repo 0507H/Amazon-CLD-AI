@@ -75,11 +75,11 @@ if(new URLSearchParams(location.search).get('embed')==='1'){
       </div>
     </div>
     <div class="card-body">
-      <div class="upload-zone" id="uploadZone">
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.style.borderColor='#2F5496';this.style.background='#f0f4ff'" ondragleave="this.style.borderColor='';this.style.background=''" ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';if(event.dataTransfer.files[0])handleFile(event.dataTransfer.files[0])">
         <div class="icon">📄</div>
         <p>拖拽文件到这里，或 <b>点击选择文件</b></p>
         <div class="hint">使用「新品文案编写表-模板.xlsx」格式</div>
-        <input type="file" id="fileInput" accept=".xlsx" style="display:none">
+        <input type="file" id="fileInput" accept=".xlsx" style="display:none" onchange="if(this.files[0])handleFile(this.files[0])">
       </div>
       <div id="fileInfo"></div>
 
