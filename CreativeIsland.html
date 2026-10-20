@@ -485,8 +485,9 @@ window.ExcelJS || document.write('<script src="https://cdnjs.cloudflare.com/ajax
       view.classList.add('active');
       // Lock outer scroll when tutorial view active
       var contentEl=document.getElementById('content');
-      if(it.dataset.view==='viewTutorial'){contentEl.style.overflow='hidden';contentEl.style.padding='0';}
-      else{contentEl.style.overflow='';contentEl.style.padding='';}
+      var topbar=document.querySelector('.topbar');
+      if(it.dataset.view==='viewTutorial'){contentEl.style.overflow='hidden';contentEl.style.padding='0';if(topbar)topbar.style.display='none';}
+      else{contentEl.style.overflow='';contentEl.style.padding='';if(topbar)topbar.style.display='';}
       var sub=document.querySelector('.topbar .t2');
       if(sub && subMap[it.dataset.view]) sub.textContent=subMap[it.dataset.view];
       // 同步激活图片工具内部 page
