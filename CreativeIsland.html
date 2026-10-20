@@ -670,10 +670,11 @@ function renderSingleTable(){
   tbody.innerHTML = '';
   const asin = document.getElementById('singleAsin').value.trim();
   const mainCount = singleImages.filter(i=>i.manualType==='MAIN').length;
+  const hasPs01 = singleImages.some(i=>i.manualType==='PS01');
 
   // 主图缺失提醒
   const tipEl = document.getElementById('singleMainTip');
-  if(singleImages.length > 0 && mainCount !== 1){
+  if(singleImages.length > 0 && !hasPs01 && mainCount !== 1){
     tipEl.style.display = 'block';
     if(mainCount === 0){
       tipEl.textContent = '⚠️ 未识别到主图（MAIN），生成压缩包时会报错，请在「手动类型」列中设置主图';
@@ -747,7 +748,8 @@ document.getElementById('singleGenZip').onclick = async ()=>{
   const asin = document.getElementById('singleAsin').value.trim();
   if(!asin){alert('请先输入ASIN');return;}
   const mainCount = singleImages.filter(i=>i.manualType==='MAIN').length;
-  if(mainCount!==1){alert(`主图数量错误，需要1个MAIN，当前${mainCount}个`);return;}
+  const hasPs01 = singleImages.some(i=>i.manualType==='PS01');
+  if(!hasPs01 && mainCount!==1){alert(`主图数量错误，需要1个MAIN，当前${mainCount}个`);return;}
 
   const zip = new JSZip();
   for(let img of singleImages){
@@ -938,9 +940,10 @@ function renderGroups(){
 
   for(let g of groupList){
     const mainCount = g.images.filter(i=>i.manualType==='MAIN').length;
-    const hasWarn = mainCount !== 1;
+    const hasPs01 = g.images.some(i=>i.manualType==='PS01');
+    const hasWarn = !hasPs01 && mainCount !== 1;
     let warnText = '';
-    if(mainCount === 0) warnText = '缺少主图';
+    if(!hasPs01 && mainCount === 0) warnText = '缺少主图';
     if(mainCount > 1) warnText = '主图过多';
 
     const card = document.createElement('div');
@@ -1244,7 +1247,8 @@ document.getElementById('multiGenZip').onclick = async ()=>{
 
   for(let g of groupList){
     const mainCount = g.images.filter(i=>i.manualType==='MAIN').length;
-    if(mainCount !== 1){
+    const hasPs01 = g.images.some(i=>i.manualType==='PS01');
+    if(!hasPs01 && mainCount !== 1){
       mlog(`❌ 【${g.sku}】主图数量错误，需要1个MAIN，当前${mainCount}个`);
       hasError = true;
     }
