@@ -4808,7 +4808,8 @@ function downloadFile() {
   if(!window._outputBlob) return;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(window._outputBlob);
-  a.download = '批量修改日期-' + document.getElementById('targetDate').value + '.xlsx';
+  const _today = new Date(); const _pad = n => String(n).padStart(2,'0');
+  a.download = 'Modified Date-' + _today.getFullYear()+'-'+_pad(_today.getMonth()+1)+'-'+_pad(_today.getDate()) + '.xlsx';
   a.click();
 }
 
