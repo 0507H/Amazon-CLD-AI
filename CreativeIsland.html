@@ -4499,8 +4499,9 @@ const BASE_TPL_B64_DE = "UEsDBAoAAAAAAIdO4kAAAAAAAAAAAAAAAAAJAAAAZG9jUHJvcHMvUEs
         <p class="hint">每行一组，逗号分隔。支持批量粘贴，自动去重。</p>
       </div>
 
-      <div style="margin-top:16px;">
+      <div style="margin-top:16px;display:flex;gap:10px;">
         <button class="btn btn-primary" onclick="generateFromInput()">🚀 生成上传文件</button>
+        <button class="btn" style="background:#e74c3c;color:#fff;" onclick="clearAll()">🗑️ 清除填写内容</button>
       </div>
     </div>
 
@@ -4518,8 +4519,9 @@ const BASE_TPL_B64_DE = "UEsDBAoAAAAAAIdO4kAAAAAAAAAAAAAAAAAJAAAAZG9jUHJvcHMvUEs
         <input type="file" id="fileInput" accept=".xlsx" style="display:none" onchange="handleFile(this)">
       </div>
       <div id="fileResult" class="result-box"></div>
-      <div style="margin-top:16px;">
+      <div style="margin-top:16px;display:flex;gap:10px;">
         <button class="btn btn-success" id="btnGenUpload" onclick="generateFromUpload()" disabled>🚀 生成上传文件</button>
+        <button class="btn" style="background:#e74c3c;color:#fff;" onclick="clearAll()">🗑️ 清除文件</button>
       </div>
     </div>
   </div>
@@ -4747,8 +4749,12 @@ async function generateFileMulti(byPT) {
   // Read as ArrayBuffer, decode as UTF-8
   const xmlBuf = await zip.file(templatePath).async('arraybuffer');
   let xml = new TextDecoder('utf-8').decode(xmlBuf);
-  const row7Idx = xml.indexOf('<row r="7"');
+  let row7Idx = xml.indexOf('<row r="7"');
   const sdEndIdx = xml.indexOf('</sheetData>');
+  if (row7Idx === -1) {
+    // DE template: no existing row 7, insert after last </row>
+    row7Idx = xml.lastIndexOf('</row>', sdEndIdx) + 6;
+  }
   const beforeRows = xml.substring(0, row7Idx);
   const afterRows = xml.substring(sdEndIdx);
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -4793,6 +4799,20 @@ function downloadFile() {
   const _today = new Date(); const _pad = n => String(n).padStart(2,'0');
   a.download = 'Modified Date-' + _today.getFullYear()+'-'+_pad(_today.getMonth()+1)+'-'+_pad(_today.getDate()) + '.xlsx';
   a.click();
+}
+
+function clearAll() {
+  selectedPT = '';
+  ptSearch.value = '';
+  ptValue.value = '';
+  document.getElementById('mskuAsinList').value = '';
+  uploadedData = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileResult').classList.remove('show');
+  document.getElementById('fileResult').innerHTML = '';
+  document.getElementById('btnGenUpload').disabled = true;
+  document.getElementById('dateResultCard').style.display = 'none';
+  window._outputBlob = null;
 }
 
 // Drag and drop
