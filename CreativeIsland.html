@@ -4467,7 +4467,7 @@ const BASE_TPL_B64_DE = "UEsDBAoAAAAAAIdO4kAAAAAAAAAAAAAAAAAJAAAAZG9jUHJvcHMvUEs
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
       <div>
         <label>目标日期（改为该日期）</label>
-        <input type="date" id="targetDate" value="2026-10-11">
+        <input type="date" id="targetDate">
         <p class="hint">通常填昨天，产品即可立即开售</p>
       </div>
       <div>
@@ -4814,6 +4814,12 @@ function downloadFile() {
       handleFile(input);
     }
   });
+})();
+// Default to yesterday
+(function(){
+  const d = new Date(); d.setDate(d.getDate()-1);
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('targetDate').value = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 })();
 </script>
 
