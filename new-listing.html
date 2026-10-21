@@ -344,11 +344,16 @@ function handleFile(file) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
       
-      // 解析公共信息（row3: B3=品牌, E3=售价, H3=父体MSKU）
-      const brand = String(rows[2]?.[1] || '').trim();
-      const price = String(rows[2]?.[4] || '').trim();
-      const parentSku = String(rows[2]?.[7] || '').trim();
-      
+      // 解析公共信息：在row3中按标签名搜索，读取右侧相邻单元格
+      const commonRow = rows[2] || [];
+      let brand = '', price = '', parentSku = '';
+      for(let ci=0; ci<commonRow.length; ci++) {
+        const cell = String(commonRow[ci]||'').trim();
+        if(cell.includes('品牌') && ci+1 < commonRow.length) brand = String(commonRow[ci+1]||'').trim();
+        if(cell.includes('售价') && ci+1 < commonRow.length) price = String(commonRow[ci+1]||'').trim();
+        if(cell.includes('父体MSKU') && ci+1 < commonRow.length) parentSku = String(commonRow[ci+1]||'').trim();
+      }
+
       if(brand) document.getElementById('brand').value = brand;
       if(price) document.getElementById('price').value = price;
       if(parentSku) document.getElementById('parentSku').value = parentSku;
@@ -407,16 +412,12 @@ function handleFile(file) {
       if(firstParent && !document.getElementById('parentSku').value.trim()) {
         document.getElementById('parentSku').value = firstParent.msku;
       }
-      // Auto-fill Product Type from child rows
+      // Auto-fill from first child row (template values override form)
       const firstChild = items.find(i=>!i.isParent);
       if(firstChild) {
-        if(firstChild.category && !document.getElementById('ptSelect').value.trim()) {
-          document.getElementById('ptSelect').value = firstChild.category;
-        }
-        if(firstChild.material && !document.getElementById('material').value.trim()) {
-          document.getElementById('material').value = firstChild.material;
-        }
-        if(firstChild.pkgL && !document.getElementById('pkgL').value.trim()) {
+        if(firstChild.category) document.getElementById('ptSelect').value = firstChild.category;
+        if(firstChild.material) document.getElementById('material').value = firstChild.material;
+        if(firstChild.pkgL) {
           document.getElementById('pkgL').value = firstChild.pkgL;
           document.getElementById('pkgW').value = firstChild.pkgW;
           document.getElementById('pkgH').value = firstChild.pkgH;
