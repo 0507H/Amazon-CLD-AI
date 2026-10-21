@@ -569,19 +569,19 @@ function generate() {
     alert('请填写售价（每行Q列或表单公共售价）'); return;
   }
   // Multi-parent: if file already contains parent rows OR children have parentMsku filled, per-item parentMsku is used
+  const children = parsedData.filter(i => !i.isParent);
   const hasParentsInFile = parsedData.some(i=>i.isParent);
   const hasChildParentMsku = children.some(c=>c.parentMsku);
   if(!isSingle && !parentSkuVal && !hasParentsInFile && !hasChildParentMsku) {
     alert('请填写父体MSKU，或勾选"单链接"'); return;
   }
-  
+
   // Date = today + 1 year
   const nextYear = new Date();
   nextYear.setFullYear(nextYear.getFullYear() + 1);
   const dateStr = nextYear.toISOString().slice(0,10);
-  
+
   // Generate parent + child rows (parent row needed for new listings)
-  const children = parsedData.filter(i => !i.isParent);
   if(children.length === 0) { alert('没有子体数据'); return; }
   // Ordered: parent rows first (as they appear), then all children
   const parents = parsedData.filter(i => i.isParent);
