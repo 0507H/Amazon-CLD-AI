@@ -171,8 +171,9 @@ const SITE_CONFIG = {
       title:6, highlight:7, brand:8, idType:9, itemTypeKeyword:11,
       modelNum:20, modelName:21, manufacturer:22,
       description:35, b1:36, b2:37, b3:38, b4:39, b5:40, st:41,
-      specialFeature:46, material:47, numItems:57, pkgQty:58, color:59,
+      specialFeature:46, material:47, numItems:57, pkgQty:58, numPieces:61, color:59,
       partNum:62, launchDate:80,
+      unitCount:78, unitCountType:79,
       itemLen:88, itemLenUnit:89, itemWid:90, itemWidUnit:91, packs:95,
       condition:104, listPrice:106, taxCode:107, merchantRelDate:108, maxOrder:109,
       fulfillment:130, price:135, offerRelDate:142,
@@ -195,6 +196,8 @@ const SITE_CONFIG = {
       currency: 'USD',
       packs: 1,
       numItems: 1,
+      numPieces: 1,
+      unitCountType: 'Count',
       pkgQty: 1
     }
   },
@@ -206,10 +209,12 @@ const SITE_CONFIG = {
       title:6, highlight:7, brand:8, idType:9,
       modelNum:22, modelName:23, manufacturer:24,
       description:43, b1:44, b2:45, b3:46, b4:47, b5:48, st:49,
-      specialFeature:54, material:60, numItems:65, pkgQty:66, color:68,
+      specialFeature:54, material:60, numItems:65, pkgQty:66, numPieces:70, color:68,
       partNum:76, launchDate:100,
+      unitCount:98, unitCountType:99,
       condition:109, listPrice:111, taxCode:112, merchantRelDate:113, maxOrder:114,
       fulfillment:136, price:141, offerRelDate:148,
+      itemLen:167, itemLenUnit:168, itemWid:169, itemWidUnit:170,
       pkgL:173, pkgLUnit:174, pkgW:175, pkgWUnit:176, pkgH:177, pkgHUnit:178,
       pkgWt:179, pkgWtUnit:180, country:186, batteries:188,
       dg1:211, dg2:212, dg3:213, dg4:214, dg5:215
@@ -229,6 +234,8 @@ const SITE_CONFIG = {
       currency: 'EUR',
       packs: 1,
       numItems: 1,
+      numPieces: 1,
+      unitCountType: 'Count',
       pkgQty: 1
     }
   }
@@ -683,8 +690,11 @@ function generate() {
         vals[C.st] = item.st;
         vals[C.specialFeature] = detectSpecialFeatures(item);
         vals[C.material] = item.material || matVal;
-        vals[C.numItems] = D.numItems;
+        vals[C.numItems] = item.quantity || D.numItems;
         vals[C.pkgQty] = D.pkgQty;
+        vals[C.numPieces] = D.numPieces;
+        vals[C.unitCount] = item.quantity || D.numItems;
+        vals[C.unitCountType] = D.unitCountType;
         vals[C.color] = item.color;
         vals[C.partNum] = item.msku;
         vals[C.listPrice] = Number((parseFloat(item.price) || priceVal).toFixed(2));
@@ -700,6 +710,10 @@ function generate() {
         vals[C.pkgWUnit] = dimUnit;
         vals[C.pkgH] = pkgH;
         vals[C.pkgHUnit] = dimUnit;
+        vals[C.itemLen] = pkgL;
+        vals[C.itemLenUnit] = dimUnit;
+        vals[C.itemWid] = pkgW;
+        vals[C.itemWidUnit] = dimUnit;
         vals[C.pkgWt] = pkgWt;
         vals[C.pkgWtUnit] = wtUnit;
         vals[C.batteries] = D.batteries;
