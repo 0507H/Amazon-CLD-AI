@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新品上传2.0</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { height:100%; overflow:hidden; }
+body { font-family: -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif; background:#f0f2f5; color:#333; }
+.tool-header { background:#1a2332; color:#fff; min-height:56px; padding:0 22px; display:flex; align-items:center; gap:14px; }
+.tool-header .icon { font-size:20px; }
+.tool-header .title { font-size:18px; font-weight:700; }
+.tool-header .subtitle { font-size:12px; color:#9aa7b8; margin-left:8px; }
+.container { max-width:1100px; margin:16px auto; padding:0 16px; height:calc(100vh - 56px); overflow-y:auto; }
+.card { background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:16px; overflow:hidden; }
+.card-head { padding:10px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f0f0f0; }
+.card-head .title { font-weight:600; font-size:14px; }
+.card-head .num { display:inline-flex; width:20px; height:20px; background:#7c3aed; color:#fff; border-radius:50%; align-items:center; justify-content:center; font-size:11px; margin-right:6px; }
+.card-body { padding:14px 16px; }
+.upload-zone { border:2px dashed #bbb; border-radius:8px; padding:20px; text-align:center; cursor:pointer; transition:all .2s; margin-bottom:10px; }
+.upload-zone:hover { border-color:#7c3aed; background:#faf5ff; }
+.upload-zone.ready { border-color:#10b981; background:#f0fdf4; }
+.upload-zone .icon { font-size:26px; margin-bottom:4px; }
+.upload-zone p { font-size:13px; color:#555; }
+.upload-zone .hint { font-size:11px; color:#999; margin-top:2px; }
+.btn { padding:9px 28px; border:none; border-radius:6px; font-size:13px; cursor:pointer; font-weight:600; }
+.btn-purple { background:#7c3aed; color:#fff; }
+.btn-green { background:#10b981; color:#fff; }
+.btn:disabled { background:#ccc; cursor:not-allowed; }
+.success-bar { background:#dcfce7; border-radius:6px; padding:8px 12px; font-size:12px; color:#166534; margin-top:10px; }
+.error-bar { background:#fee2e2; border-radius:6px; padding:8px 12px; font-size:12px; color:#991b1b; margin-top:10px; }
+.warn-bar { background:#fef3c7; border-radius:6px; padding:8px 12px; font-size:12px; color:#92400e; margin-top:10px; }
+.file-info { background:#f5f7fa; border-radius:6px; padding:8px 12px; margin-top:8px; font-size:12px; }
+.table-wrap { overflow:auto; border:1px solid #eee; border-radius:6px; max-height:350px; margin-top:10px; }
+table { width:100%; border-collapse:collapse; font-size:11px; }
+th { background:#1a2332; color:#fff; padding:6px 8px; text-align:left; white-space:nowrap; font-weight:500; position:sticky; top:0; }
+td { padding:5px 8px; border-bottom:1px solid #eee; white-space:nowrap; }
+.tag { padding:1px 6px; border-radius:8px; font-size:10px; }
+.tag-p { background:#e3f2fd; color:#1565c0; }
+.tag-c { background:#e8f5e9; color:#2e7d32; }
+.actions { display:flex; gap:10px; align-items:center; margin-top:14px; flex-wrap:wrap; }
+.match-info { font-size:11px; color:#666; margin-top:8px; line-height:1.6; }
+.match-info b { color:#7c3aed; }
+</style>
+</head>
+<body>
+<div class="tool-header"><div class="icon">🚀</div><div><span class="title">新品上传2.0</span><span class="subtitle">上传Amazon模板 + 文案表，自动生成多品类上传文件</span></div></div>
+<div class="container">
+
+  <!-- Step 1: Download template -->
+  <div class="card">
+    <div class="card-head"><div class="title"><span class="num">1</span>下载文案填写表</div></div>
+    <div class="card-body">
+      <button class="btn btn-purple" onclick="downloadTemplate()">📥 下载文案填写表</button>
+      <span style="font-size:11px;color:#999;margin-left:10px;">下载后填写标题、五点、详描、尺寸等信息</span>
+    </div>
+  </div>
+
+  <!-- Step 2: Upload Amazon template -->
+  <div class="card">
+    <div class="card-head"><div class="title"><span class="num">2</span>上传Amazon分类商品报告（模板）</div></div>
+    <div class="card-body">
+      <div class="upload-zone" id="tplZone" onclick="document.getElementById('tplInput').click()">
+        <div class="icon">📋</div>
+        <p>上传Amazon分类商品报告（.xlsm）</p>
+        <div class="hint">空白模板或已填好的母版均可，工具会自动识别表头字段</div>
+        <input type="file" id="tplInput" accept=".xlsm,.xlsx" style="display:none" onchange="if(this.files[0])handleTemplate(this.files[0])">
+      </div>
+      <div id="tplInfo"></div>
+    </div>
+  </div>
+
+  <!-- Step 3: Upload 文案表 -->
+  <div class="card">
+    <div class="card-head"><div class="title"><span class="num">3</span>上传填好的文案表</div></div>
+    <div class="card-body">
+      <div class="upload-zone" id="dataZone" onclick="document.getElementById('dataInput').click()">
+        <div class="icon">📄</div>
+        <p>上传填好的文案编写表（.xlsx）</p>
+        <div class="hint">使用步骤1下载的模板格式</div>
+        <input type="file" id="dataInput" accept=".xlsx" style="display:none" onchange="if(this.files[0])handleData(this.files[0])">
+      </div>
+      <div id="dataInfo"></div>
+    </div>
+  </div>
+
+  <!-- Step 4: Generate -->
+  <div class="card" id="genCard" style="display:none">
+    <div class="card-head"><div class="title"><span class="num">4</span>生成上传文件</div></div>
+    <div class="card-body">
+      <div class="actions">
+        <button class="btn btn-green" id="genBtn" onclick="generate()">⚡ 生成上传文件</button>
+        <button class="btn" style="background:#fff;border:1px solid #ddd;color:#333;" onclick="downloadResult()">📥 下载结果</button>
+      </div>
+      <div id="genInfo"></div>
+      <div class="table-wrap" id="previewWrap" style="display:none"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ========== State ==========
+let tplZip = null;          // JSZip of uploaded Amazon template
+let tplSheetPath = null;    // path to the Template sheet XML
+let tplSheetName = null;    // name of the Template sheet
+let colMap = {};            // our field -> column index in Amazon template
+let parsedRows = [];        // data rows from 文案表
+let commonParams = {};      // brand, price, parentSku from row 3
+let outputBlob = null;
+
+// ========== Download 文案表 template (reuse base64 from v1) ==========
+function downloadTemplate() {
+  // Use the same template as v1
+  const b64 = document.createElement('script');
+  // We'll fetch the v1 template base64 by creating a hidden iframe approach
+  // Actually, just generate it on the fly with SheetJS
+  const data = XLSX.utils.aoa_to_sheet([
+    ['新品文案编写表'],
+    ['填写说明：父体行选Parent填父体SKU，子体行选Child并在C列填所属父体SKU；Q列售价每行可单独填写'],
+    ['品牌名','','','售价(USD)','','','父体MSKU',''],
+    ['变体编码','MSKU','父MSKU','产品类目','标题(Product Name)','亮点/Title Differentiation','五点描述1','五点描述2','五点描述3','五点描述4','五点描述5','商品描述','搜索词(Search Terms)','颜色/版本','材质','数量','售价(USD)','包装长(inch)','包装宽(inch)','包装高(inch)','包装重量(lb)'],
+    ['Parent','Parent-SKU-01','','BADGE_HOLDER','产品标题','','','','','','','','','','','','','','','',''],
+    ['Child','Parent-SKU-01-01','Parent-SKU-01','','产品标题-颜色1','亮点','五点1','五点2','五点3','五点4','五点5','','','颜色1','','','9.99','','','','']
+  ]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, data, '文案表');
+  XLSX.writeFile(wb, '新品文案编写表-模板.xlsx');
+}
+
+// ========== Step 2: Handle Amazon template upload ==========
+async function handleTemplate(file) {
+  try {
+    const buf = await file.arrayBuffer();
+    tplZip = await JSZip.loadAsync(buf);
+    // Find the Template sheet
+    const wbXml = await tplZip.file('xl/workbook.xml').async('string');
+    const relsXml = await tplZip.file('xl/_rels/workbook.xml.rels').async('string');
+    const sheets = [...wbXml.matchAll(/<sheet[^>]*name="([^"]*)"[^>]*r:id="(rId\d+)"/g)];
+    const rels = [...relsXml.matchAll(/<Relationship\b[^>]*>/g)].map(m => {
+      const tag = m[0];
+      const idM = tag.match(/Id="(rId\d+)"/);
+      const tgtM = tag.match(/Target="([^"]*)"/);
+      return [tag, tgtM ? tgtM[1] : '', idM ? idM[1] : ''];
+    });
+    // Find the sheet that has data (not "Changes", "Instructions", etc.)
+    let found = null;
+    for(const [,name,rid] of sheets) {
+      if(['Template','Vorlage'].includes(name)) {
+        const rel = rels.find(r => r[2] === rid);
+        if(rel) { tplSheetName = name; found = 'xl/' + rel[1].replace(/^\//,''); break; }
+      }
+    }
+    if(!found) {
+      // fallback: pick the sheet that's not meta
+      for(const [,name,rid] of sheets) {
+        if(!['Changes to the template','Instructions','Images','Data Definitions','Conditions List','Valid Values','Dropdown Lists','AttributePTDMAP','Änderungen an der Vorlage','Anleitungen','Bilder','Datendefinitionen','Daten durchsuchen','Gültige Werte'].includes(name)) {
+          const rel = rels.find(r => r[2] === rid);
+          if(rel) { tplSheetName = name; found = 'xl/' + rel[1].replace(/^\//,''); break; }
+        }
+      }
+    }
+    tplSheetPath = found;
+    if(!tplSheetPath) throw new Error('未找到Template工作表');
+
+    // Read headers from the sheet XML to build column mapping
+    await buildColMap();
+
+    document.getElementById('tplZone').classList.add('ready');
+    document.getElementById('tplInfo').innerHTML =
+      `<div class="file-info">✅ 模板已加载：<b>${tplSheetName}</b><div class="match-info" id="matchInfo"></div></div>`;
+    updateGenCard();
+  } catch(e) {
+    document.getElementById('tplInfo').innerHTML = `<div class="error-bar">❌ 模板解析失败：${e.message}</div>`;
+  }
+}
+
+// Build column mapping by reading header row 4 from template XML
+async function buildColMap() {
+  const xml = await tplZip.file(tplSheetPath).async('string');
+  // Extract row 4 cells
+  const row4Match = xml.match(/<row r="4"[^>]*>([\s\S]*?)<\/row>/);
+  if(!row4Match) throw new Error('模板表头行未找到');
+  const cells = [...row4Match[1].matchAll(/<c r="([A-Z]+)4"[^>]*>(?:<is><t>([^<]*)<\/t><\/is>|<v>([^<]*)<\/v>)?<\/c>/g)];
+  
+  // Build label -> column index map
+  const labels = {};
+  cells.forEach(m => {
+    const colStr = m[1];
+    const label = (m[2] || m[3] || '').trim();
+    if(label) {
+      // Convert column letter to 0-based index
+      let idx = 0;
+      for(let i=0; i<colStr.length; i++) idx = idx*26 + (colStr.charCodeAt(i)-64);
+      idx--;
+      labels[idx] = label.toLowerCase();
+    }
+  });
+
+  // Match our fields to Amazon template columns
+  // Field matching rules: search keywords in header labels
+  const matchRules = {
+    sku: ['sku', 'seller-sku', 'your product sku'],
+    pt: ['product type', 'product_type', 'item type keyword'],
+    action: ['action', 'update', 'create or replace'],
+    parentage: ['parentage', 'parent', 'child'],
+    parentSku: ['parent sku', 'parent-sku', 'parentchild'],
+    vTheme: ['variation theme', 'variation-theme'],
+    title: ['item name', 'product name', 'title', 'product name'],
+    highlight: ['generic keyword', 'title differentiation', 'highlight'],
+    brand: ['brand', 'brand name'],
+    idType: ['product id type', 'id type'],
+    modelNum: ['model number', 'model #', 'modelnumber'],
+    modelName: ['model name'],
+    manufacturer: ['manufacturer'],
+    description: ['description', 'product description', 'product description'],
+    b1: ['key product feature', 'bullet1', 'bullet point 1'],
+    b2: ['key product feature', 'bullet2', 'bullet point 2'],
+    b3: ['key product feature', 'bullet3', 'bullet point 3'],
+    b4: ['key product feature', 'bullet4', 'bullet point 4'],
+    b5: ['key product feature', 'bullet5', 'bullet point 5'],
+    st: ['search terms', 'search-term'],
+    material: ['material', 'material type'],
+    color: ['color', 'color map', 'color-name'],
+    price: ['your price', 'standard price', 'price', 'sale price'],
+    listPrice: ['list price', 'list-price'],
+    quantity: ['number of items', 'quantity'],
+    pkgL: ['item length', 'package length', 'item-length'],
+    pkgW: ['item width', 'package width', 'item-width'],
+    pkgH: ['item height', 'package height', 'item-height'],
+    pkgWt: ['item weight', 'package weight', 'item-weight'],
+    launchDate: ['launch date', 'release date'],
+    condition: ['condition', 'item condition'],
+    country: ['country', 'launch country'],
+    partNum: ['part number', 'part-number'],
+  };
+
+  colMap = {};
+  const matched = [];
+  const unmatched = [];
+  for(const [field, keywords] of Object.entries(matchRules)) {
+    for(const [idx, label] of Object.entries(labels)) {
+      if(keywords.some(kw => label.includes(kw))) {
+        colMap[field] = parseInt(idx);
+        matched.push(`${field} → ${labels[idx]}`);
+        break;
+      }
+    }
+    if(colMap[field] === undefined) unmatched.push(field);
+  }
+
+  const mi = document.getElementById('matchInfo');
+  if(mi) {
+    mi.innerHTML = `已匹配 <b>${matched.length}</b> 个字段：${matched.slice(0,8).join('、')}${matched.length>8?'...':''}<br>未匹配：${unmatched.join('、') || '无'}`;
+  }
+  console.log('Column map:', colMap, 'Labels:', labels);
+}
+
+// ========== Step 3: Handle 文案表 upload ==========
+function handleData(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+
+      // Parse common params from row 3 (index 2)
+      const commonRow = rows[2] || [];
+      for(let ci=0; ci<commonRow.length; ci++) {
+        const cell = String(commonRow[ci]||'').trim();
+        if(cell.includes('品牌') && ci+1 < commonRow.length) commonParams.brand = String(commonRow[ci+1]||'').trim();
+        if(cell.includes('售价') && ci+1 < commonRow.length) commonParams.price = String(commonRow[ci+1]||'').trim();
+        if(cell.includes('父体MSKU') && ci+1 < commonRow.length) commonParams.parentSku = String(commonRow[ci+1]||'').trim();
+      }
+
+      // Parse data rows
+      parsedRows = [];
+      for(let r=4; r<rows.length; r++) {
+        const row = rows[r];
+        if(!row[1] || !String(row[1]).trim()) continue;
+        const parentageSel = String(row[0]||'').trim();
+        const item = {
+          variantCode: parentageSel,
+          msku: String(row[1]||'').trim(),
+          parentMsku: String(row[2]||'').trim(),
+          category: String(row[3]||'').trim(),
+          title: String(row[4]||'').trim(),
+          highlight: String(row[5]||'').trim(),
+          b1: String(row[6]||'').trim(),
+          b2: String(row[7]||'').trim(),
+          b3: String(row[8]||'').trim(),
+          b4: String(row[9]||'').trim(),
+          b5: String(row[10]||'').trim(),
+          description: String(row[11]||'').trim(),
+          st: String(row[12]||'').trim(),
+          color: String(row[13]||'').trim(),
+          material: String(row[14]||'').trim(),
+          quantity: String(row[15]||'').trim(),
+          price: String(row[16]||'').trim(),
+          pkgL: String(row[17]||'').trim(),
+          pkgW: String(row[18]||'').trim(),
+          pkgH: String(row[19]||'').trim(),
+          pkgWt: String(row[20]||'').trim(),
+          isParent: parentageSel.toLowerCase().includes('parent'),
+        };
+        parsedRows.push(item);
+      }
+
+      document.getElementById('dataZone').classList.add('ready');
+      document.getElementById('dataInfo').innerHTML =
+        `<div class="file-info">✅ 已识别 <b>${parsedRows.length}</b> 行（${parsedRows.filter(i=>i.isParent).length}父体 + ${parsedRows.filter(i=>!i.isParent).length}子体）` +
+        (commonParams.brand ? `，品牌：${commonParams.brand}` : '') +
+        (commonParams.price ? `，售价：${commonParams.price}` : '') +
+        `</div>`;
+      updateGenCard();
+    } catch(err) {
+      document.getElementById('dataInfo').innerHTML = `<div class="error-bar">❌ 解析失败：${err.message}</div>`;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function updateGenCard() {
+  if(tplZip && parsedRows.length > 0) {
+    document.getElementById('genCard').style.display = 'block';
+  }
+}
+
+// ========== Step 4: Generate ==========
+async function generate() {
+  try {
+    document.getElementById('genBtn').disabled = true;
+    document.getElementById('genBtn').textContent = '⏳ 生成中...';
+
+    const xml = await tplZip.file(tplSheetPath).async('string');
+
+    // Find where data rows start (row 7)
+    const sdEndIdx = xml.indexOf('</sheetData>');
+    let rowStartIdx = xml.indexOf('<row r="7"');
+    if(rowStartIdx === -1) rowStartIdx = sdEndIdx;
+    const beforeRows = xml.substring(0, rowStartIdx);
+    const afterRows = xml.substring(sdEndIdx);
+
+    const colLetter = n => {
+      let s = ''; n++;
+      while(n > 0) { const m = (n-1)%26; s = String.fromCharCode(65+m)+s; n = Math.floor((n-1)/26); }
+      return s;
+    };
+    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    const dateStr = new Date(Date.now()+365*24*60*60*1000).toISOString().slice(0,10);
+
+    // Group by product type
+    const groups = {};
+    parsedRows.forEach(item => {
+      const pt = item.category || 'DEFAULT';
+      if(!groups[pt]) groups[pt] = [];
+      groups[pt].push(item);
+    });
+
+    let newRows = '';
+    let rowNum = 7;
+    const warnings = [];
+
+    for(const [pt, items] of Object.entries(groups)) {
+      // Group marker row (comment)
+      items.forEach(item => {
+        const vals = {};
+        if(colMap.sku !== undefined) vals[colMap.sku] = item.msku;
+        if(colMap.pt !== undefined) vals[colMap.pt] = pt;
+        if(colMap.title !== undefined) vals[colMap.title] = item.title;
+        if(colMap.brand !== undefined) vals[colMap.brand] = commonParams.brand || '';
+        if(colMap.price !== undefined) {
+          const p = parseFloat(item.price) || parseFloat(commonParams.price) || 0;
+          if(p > 0) vals[colMap.price] = p;
+        }
+        if(colMap.b1 !== undefined && item.b1) vals[colMap.b1] = item.b1;
+        if(colMap.b2 !== undefined && item.b2) vals[colMap.b2] = item.b2;
+        if(colMap.b3 !== undefined && item.b3) vals[colMap.b3] = item.b3;
+        if(colMap.b4 !== undefined && item.b4) vals[colMap.b4] = item.b4;
+        if(colMap.b5 !== undefined && item.b5) vals[colMap.b5] = item.b5;
+        if(colMap.description !== undefined && item.description) vals[colMap.description] = item.description;
+        if(colMap.st !== undefined && item.st) vals[colMap.st] = item.st;
+        if(colMap.color !== undefined && item.color) vals[colMap.color] = item.color;
+        if(colMap.material !== undefined && item.material) vals[colMap.material] = item.material;
+        if(colMap.highlight !== undefined && item.highlight) vals[colMap.highlight] = item.highlight;
+        if(colMap.quantity !== undefined && item.quantity) vals[colMap.quantity] = item.quantity;
+        if(colMap.pkgL !== undefined && item.pkgL) vals[colMap.pkgL] = item.pkgL;
+        if(colMap.pkgW !== undefined && item.pkgW) vals[colMap.pkgW] = item.pkgW;
+        if(colMap.pkgH !== undefined && item.pkgH) vals[colMap.pkgH] = item.pkgH;
+        if(colMap.pkgWt !== undefined && item.pkgWt) vals[colMap.pkgWt] = item.pkgWt;
+        if(colMap.modelNum !== undefined) vals[colMap.modelNum] = item.msku;
+        if(colMap.partNum !== undefined) vals[colMap.partNum] = item.msku;
+        if(colMap.launchDate !== undefined) vals[colMap.launchDate] = dateStr;
+        if(colMap.parentage !== undefined) {
+          vals[colMap.parentage] = item.isParent ? 'Parent' : 'Child';
+        }
+        if(colMap.parentSku !== undefined && !item.isParent) {
+          vals[colMap.parentSku] = item.parentMsku || commonParams.parentSku || '';
+        }
+        if(colMap.parentSku !== undefined && item.isParent) {
+          vals[colMap.parentSku] = item.msku;
+        }
+
+        newRows += '<row r="'+rowNum+'">';
+        Object.entries(vals).forEach(([c, v]) => {
+          if(v !== '' && v != null) {
+            const ref = colLetter(parseInt(c)) + rowNum;
+            if(typeof v === 'number' || /^\d+(\.\d+)?$/.test(String(v))) {
+              newRows += '<c r="'+ref+'" t="n"><v>'+v+'</v></c>';
+            } else {
+              newRows += '<c r="'+ref+'" t="inlineStr"><is><t>'+esc(v)+'</t></is></c>';
+            }
+          }
+        });
+        newRows += '</row>';
+        rowNum++;
+      });
+    }
+
+    const newXml = beforeRows + newRows + afterRows;
+    tplZip.file(tplSheetPath, new TextEncoder().encode(newXml));
+
+    const out = await tplZip.generateAsync({type:'uint8array', compression:'DEFLATE'});
+    outputBlob = new Blob([out.buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+
+    document.getElementById('genBtn').disabled = false;
+    document.getElementById('genBtn').textContent = '⚡ 生成上传文件';
+    document.getElementById('genInfo').innerHTML =
+      `<div class="success-bar">✅ 生成完成！共 ${rowNum-7} 行数据，${Object.keys(groups).length} 个品类：${Object.keys(groups).join('、')}</div>` +
+      (warnings.length ? `<div class="warn-bar">⚠️ ${warnings.join('<br>')}</div>` : '');
+
+    // Preview table
+    let html = '<table><thead><tr><th>SKU</th><th>类型</th><th>品类</th><th>标题</th><th>价格</th></tr></thead><tbody>';
+    parsedRows.forEach(item => {
+      const p = item.price || commonParams.price || '-';
+      html += `<tr><td>${item.msku}</td><td>${item.isParent?'父体':'子体'}</td><td>${item.category}</td><td>${item.title.substring(0,50)}</td><td>${p}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('previewWrap').style.display = 'block';
+    document.getElementById('previewWrap').innerHTML = html;
+  } catch(e) {
+    document.getElementById('genBtn').disabled = false;
+    document.getElementById('genBtn').textContent = '⚡ 生成上传文件';
+    document.getElementById('genInfo').innerHTML = `<div class="error-bar">❌ 生成失败：${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+function downloadResult() {
+  if(!outputBlob) return;
+  const url = URL.createObjectURL(outputBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Amazon-新品上传文件.xlsx';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
