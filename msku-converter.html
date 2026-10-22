@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MSKU 逗号转换工具 · 报错提取 + 分组复制</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#eef1f6;font-family:-apple-system,"PingFang SC","Microsoft YaHei",Arial,sans-serif;color:#2f3542;font-size:13px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 0 40px}
+header{background:linear-gradient(135deg,#2f5496,#1f3a6e);color:#fff;padding:22px 30px;border-radius:0 0 10px 10px}
+header h1{margin:0;font-size:21px;font-weight:600}
+header .sub{margin-top:6px;font-size:12px;opacity:.85;line-height:1.7}
+.sec{background:#fff;border-radius:10px;padding:16px 18px;margin:16px 20px 0;box-shadow:0 1px 4px rgba(20,40,80,.07)}
+.hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px;flex-wrap:wrap}
+h2{font-size:14px;margin:0;padding-left:10px;border-left:4px solid #2f5496;line-height:1.2}
+.note{font-size:11.5px;color:#8a94a6}
+textarea{width:100%;padding:12px 14px;border:1px solid #d6dbe4;border-radius:8px;font-family:ui-monospace,Consolas,Menlo,monospace;font-size:13px;line-height:1.7;resize:vertical;outline:none;background:#fbfcfe}
+textarea:focus{border-color:#2f5496;background:#fff}
+#in{min-height:210px}
+.opts{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin:12px 0 0;padding:10px 0 0;border-top:1px dashed #e6eaf1}
+label.ck{display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;user-select:none}
+label.ck input{width:15px;height:15px;accent-color:#2f5496;cursor:pointer}
+.pfx{display:flex;align-items:center;gap:6px;font-size:12.5px}
+.pfx input{padding:5px 8px;border:1px solid #d6dbe4;border-radius:6px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;width:120px;outline:none}
+.pfx input:focus{border-color:#2f5496}
+.mode{display:flex;align-items:center;gap:6px;font-size:12.5px}
+select{padding:5px 8px;border:1px solid #d6dbe4;border-radius:6px;background:#fff;font-size:12.5px;outline:none;cursor:pointer}
+select:focus{border-color:#2f5496}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+button{font-size:12.5px;padding:7px 16px;border-radius:8px;border:none;cursor:pointer;background:#2f5496;color:#fff}
+button.ghost{background:#fff;color:#2f5496;border:1px solid #b8c4d8}
+button:hover{opacity:.9}
+button:active{transform:translateY(1px)}
+.stats{display:flex;gap:22px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:#5b6472;align-items:center}
+.stats b{color:#1f3a6e;font-size:14px}
+.mode-tag{font-size:11px;border-radius:20px;padding:2px 9px;background:#eef3fc;color:#2f5496}
+.mode-tag.err{background:#fff1f0;color:#a8071a}
+.warn{background:#fff1f0;border:1px solid #ffccc7;color:#a8071a;border-radius:8px;padding:9px 12px;margin-top:10px;font-size:12px;display:none}
+.ok{background:#f6ffed;border:1px solid #b7eb8f;color:#237804;border-radius:8px;padding:9px 12px;margin-top:10px;font-size:12px;display:none}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chips span{font-size:11px;background:#eef3fc;color:#2f5496;border-radius:20px;padding:3px 10px}
+.tip{font-size:11.5px;color:#8a94a6;line-height:1.9;margin-top:10px}
+/* ---- 分组结果框 ---- */
+.gbox{border:1px solid #dbe4f0;border-radius:10px;margin-top:12px;overflow:hidden;background:#fbfcfe}
+.gbox:first-child{margin-top:0}
+.gbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f0f5fc;border-bottom:1px solid #e3ebf6}
+.gname{font-size:12.5px;font-weight:600;color:#1f3a6e}
+.gcnt{font-size:11.5px;color:#8a94a6}
+.gbar .gcopy{margin-left:auto;font-size:11.5px;padding:4px 12px;border-radius:6px;background:#2f5496;color:#fff;border:none;cursor:pointer}
+.gbar .gcopy:hover{opacity:.9}
+.gbox textarea{border:none;border-radius:0;background:#fff;padding:10px 12px;min-height:54px;height:54px;font-size:12.5px;resize:vertical}
+.gbox textarea:focus{outline:2px dashed #2f5496;outline-offset:-3px}
+.empty{font-size:12px;color:#a6adba;padding:22px 12px;text-align:center;border:1px dashed #d6dbe4;border-radius:10px}
+@media(max-width:700px){header{padding:18px 20px}.sec{margin:12px 12px 0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>MSKU 逗号转换工具</h1>
+  <div class="sub">① 粘贴 MSKU 列表 → 转英文逗号文本；② 直接粘贴亚马逊报错 JSON → 自动提取 MSKU。支持按 20 个一组输出，每组一个独立复制框，一键复制单组。全程本地运行，不联网。</div>
+</header>
+
+<div class="sec">
+  <div class="hd">
+    <h2>输入</h2>
+    <div class="mode">
+      <span class="note">识别模式</span>
+      <select id="mode">
+        <option value="auto" selected>自动识别（推荐）</option>
+        <option value="error">报错 JSON 提取</option>
+        <option value="text">普通文本转换</option>
+      </select>
+    </div>
+  </div>
+  <textarea id="in" placeholder="方式一：一行一个 MSKU，或从 Excel 直接粘一整列&#10;&#10;方式二：把亚马逊报错整段粘进来，例如&#10;{&quot;code&quot;:&quot;FBA_INB_0182&quot;,&quot;details&quot;:&quot;There's an input error with the resource 'NK_C0700174_1'.&quot;,&quot;severity&quot;:&quot;ERROR&quot;}&#10;&#10;两种都支持，粘完自动出结果"></textarea>
+
+  <div class="opts">
+    <label class="ck"><input type="checkbox" id="dedupe" checked>去重（保留首次出现）</label>
+    <label class="ck"><input type="checkbox" id="upper">转大写</label>
+    <label class="ck"><input type="checkbox" id="trimq" checked>去掉首尾引号</label>
+    <span class="pfx">统一加前缀 <input id="prefix" placeholder="如 RS_JYP_" spellcheck="false"></span>
+    <span class="pfx">分组 <input id="grp" type="number" min="0" step="1" value="20" style="width:64px"> 个一组（0＝不分）</span>
+  </div>
+
+  <div class="btns">
+    <button id="btnCopyAll">复制全部</button>
+    <button id="btnTxt" class="ghost">下载 TXT</button>
+    <button id="btnClear" class="ghost">清空</button>
+  </div>
+
+  <div class="stats">
+    <span>输入 <b id="nIn">0</b> 条</span>
+    <span>输出 <b id="nOut">0</b> 条</span>
+    <span>重复 <b id="nDup">0</b> 条</span>
+    <span>共 <b id="nGrp">0</b> 组</span>
+    <span class="mode-tag" id="modeTag">等待输入</span>
+  </div>
+  <div class="warn" id="warn"></div>
+  <div class="ok" id="ok"></div>
+</div>
+
+<div class="sec">
+  <div class="hd"><h2>结果（每组一个复制框）</h2><span class="note" id="outNote">每框对应一组，点右侧「复制本组」</span></div>
+  <div id="outWrap"><div class="empty" id="outEmpty">结果会自动出现在这里</div></div>
+  <div class="tip">
+    报错提取会抓取 <code>resource '...'</code>、<code>"resource":"..."</code> 里的 SKU，也兼容被截断的片段；普通模式按换行、空格、Tab、中英文逗号、顿号、分号、竖线拆分；输出统一英文逗号、逗号后不留空格、保持原顺序；分组填 20 就是每 20 个一框，多余自动再开一框。
+  </div>
+  <div class="chips">
+    <span>报错 JSON 直接粘</span><span>每 20 个一框</span><span>单组独立复制</span><span>Excel 整列直接粘</span><span>自动去重</span><span>可加统一前缀</span>
+  </div>
+</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var SPLIT = /[\s,，、;；|｜]+/;
+  var lastGroups = [];
+
+  // ---------- 报错 JSON 识别 ----------
+  function looksLikeSku(t) {
+    if (!t || t.length < 4 || t.length > 40) return false;
+    if (!/\d/.test(t)) return false;
+    if (/^FBA_/i.test(t)) return false;
+    if (/^(ERROR|WARNING|SKU|ASIN|MSKU)$/i.test(t)) return false;
+    if (/[_-]/.test(t)) return /^[A-Za-z0-9]+([_-][A-Za-z0-9]+)+$/.test(t);
+    return /^[A-Za-z]{1,3}\d{6,}[A-Za-z0-9]*$/.test(t);
+  }
+
+  function isErrorPayload(s) {
+    return /resource\s*['"]|"resource"\s*:|FBA_INB_\d+/i.test(s);
+  }
+
+  function extractFromError(raw) {
+    var s = String(raw || '');
+    s = s.replace(/\\"/g, '"').replace(/\\'/g, "'");
+
+    var reRes = /"resource"\s*:\s*"([^"]+)"|resource\s*[:=]?\s*'([^']+)'|resource\s*[:=]?\s*"([^"]+)"/gi;
+    var events = [], m;
+    while ((m = reRes.exec(s)) !== null) {
+      var v = (m[1] || m[2] || m[3] || '').trim();
+      if (v) events.push({ idx: m.index, val: v, res: true });
+    }
+    var resCount = events.length;
+
+    var resSet = Object.create(null);
+    events.forEach(function (e) { resSet[e.val] = 1; });
+
+    var reQ = /["']([^"'\n]{3,40})["']/g, q;
+    while ((q = reQ.exec(s)) !== null) {
+      var t = q[1].trim();
+      if (resSet[t]) continue;
+      if (looksLikeSku(t)) events.push({ idx: q.index, val: t, res: false });
+    }
+
+    events.sort(function (a, b) { return a.idx - b.idx; });
+    var out = [], seen = Object.create(null), exDup = 0;
+    events.forEach(function (e) {
+      if (seen[e.val]) { exDup++; return; }
+      seen[e.val] = 1; out.push(e.val);
+    });
+    return { list: out, resources: resCount, dup: exDup };
+  }
+
+  // ---------- 普通文本 ----------
+  function parseText(text) {
+    return String(text || '').split(SPLIT).map(function (t) {
+      t = t.trim();
+      if ($('trimq').checked) t = t.replace(/^["'“”‘’]+|["'“”‘’]+$/g, '').trim();
+      return t;
+    }).filter(function (t) { return t !== ''; });
+  }
+
+  // ---------- 主流程 ----------
+  function build() {
+    var raw = $('in').value;
+    var mode = $('mode').value;
+    var useError = (mode === 'error') || (mode === 'auto' && isErrorPayload(raw));
+    var tokens, info = { mode: useError ? 'error' : 'text' };
+
+    if (useError) {
+      var r = extractFromError(raw);
+      tokens = r.list;
+      info.resources = r.resources;
+      info.exDup = r.dup;
+    } else {
+      tokens = parseText(raw);
+    }
+
+    var total = tokens.length;
+    if ($('upper').checked) tokens = tokens.map(function (t) { return t.toUpperCase(); });
+    var p = $('prefix').value || '';
+    if (p !== '') tokens = tokens.map(function (t) { return p + t; });
+
+    var dup = (info.exDup || 0);
+    if ($('dedupe').checked) {
+      var seen = Object.create(null), uniq = [];
+      tokens.forEach(function (t) {
+        if (seen[t]) { dup++; return; }
+        seen[t] = 1; uniq.push(t);
+      });
+      tokens = uniq;
+    }
+
+    var size = parseInt($('grp').value, 10);
+    if (isNaN(size) || size < 0) size = 0;
+    var groups = [];
+    if (size > 0) {
+      for (var i = 0; i < tokens.length; i += size) groups.push(tokens.slice(i, i + size));
+    } else if (tokens.length) {
+      groups = [tokens];
+    }
+
+    info.total = total; info.dup = dup; info.out = tokens.length;
+    info.groups = groups.length; info.size = size;
+    return { tokens: tokens, groups: groups, info: info };
+  }
+
+  // ---------- 复制 ----------
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function copyText(text, okMsg) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { flash(okMsg); }, function () { legacyCopy(text, okMsg); });
+    } else {
+      legacyCopy(text, okMsg);
+    }
+  }
+  function legacyCopy(text, okMsg) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); flash(okMsg); }
+    catch (e) { flash('复制失败，请手动全选复制'); }
+    document.body.removeChild(ta);
+  }
+  function flash(msg) {
+    var o = $('ok');
+    o.textContent = msg;
+    o.style.display = 'block';
+    clearTimeout(o._t);
+    o._t = setTimeout(function () { o.style.display = 'none'; }, 1800);
+  }
+
+  // ---------- 渲染分组框 ----------
+  function render() {
+    var r = build(), wrap = $('outWrap');
+    lastGroups = r.groups;
+    $('nIn').textContent = r.info.total;
+    $('nOut').textContent = r.info.out;
+    $('nDup').textContent = r.info.dup;
+    $('nGrp').textContent = r.info.groups;
+
+    var tag = $('modeTag');
+    if (!$('in').value.trim()) {
+      tag.className = 'mode-tag'; tag.textContent = '等待输入';
+    } else if (r.info.mode === 'error') {
+      tag.className = 'mode-tag err';
+      tag.textContent = '报错提取 · 命中 resource 字段 ' + (r.info.resources || 0) + ' 处';
+    } else {
+      tag.className = 'mode-tag'; tag.textContent = '普通文本转换';
+    }
+
+    // 空态
+    if (!r.groups.length) {
+      wrap.innerHTML = '<div class="empty">结果会自动出现在这里</div>';
+      $('warn').style.display = 'none';
+      $('outNote').textContent = '每框对应一组，点右侧「复制本组」';
+      return;
+    }
+
+    // 生成分组框
+    var html = '';
+    r.groups.forEach(function (g, i) {
+      html += '<div class="gbox">' +
+        '<div class="gbar"><span class="gname">第 ' + (i + 1) + ' 组</span>' +
+        '<span class="gcnt">' + g.length + ' 条</span>' +
+        '<button class="gcopy" type="button" data-gi="' + i + '">复制本组</button></div>' +
+        '<textarea readonly rows="2" spellcheck="false">' + esc(g.join(',')) + '</textarea>' +
+        '</div>';
+    });
+    wrap.innerHTML = html;
+
+    Array.prototype.forEach.call(wrap.querySelectorAll('.gcopy'), function (btn) {
+      btn.addEventListener('click', function () {
+        var gi = parseInt(btn.getAttribute('data-gi'), 10);
+        var g = lastGroups[gi] || [];
+        copyText(g.join(','), '已复制第 ' + (gi + 1) + ' 组 · ' + g.length + ' 条');
+      });
+    });
+
+    // 提示
+    var warn = $('warn');
+    var bad = (r.info.mode === 'text') ? r.tokens.filter(function (t) { return /[，、；;|｜\s]/.test(t); }) : [];
+    if (bad.length) {
+      warn.style.display = 'block';
+      warn.textContent = '注意：有 ' + bad.length + ' 条内含未识别字符，请检查：' + bad.slice(0, 3).join(' / ');
+    } else {
+      warn.style.display = 'none';
+    }
+    $('outNote').textContent = r.info.size > 0
+      ? '每 ' + r.info.size + ' 个一组，共 ' + r.info.groups + ' 组，点「复制本组」单独复制'
+      : '不分组，共 ' + r.info.groups + ' 组';
+  }
+
+  // ---------- 按钮 ----------
+  $('btnCopyAll').addEventListener('click', function () {
+    if (!lastGroups.length) { flash('还没有内容可复制'); return; }
+    var all = lastGroups.map(function (g) { return g.join(','); }).join('\n');
+    copyText(all, '已复制全部 ' + $('nOut').textContent + ' 条（' + $('nGrp').textContent + ' 组）');
+  });
+
+  $('btnTxt').addEventListener('click', function () {
+    if (!lastGroups.length) { flash('还没有内容可下载'); return; }
+    var all = lastGroups.map(function (g) { return g.join(','); }).join('\n');
+    var blob = new Blob([all], { type: 'text/plain;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'MSKU_' + new Date().toISOString().slice(0, 10) + '.txt';
+    a.click();
+    flash('已下载 TXT（每组一行）');
+  });
+
+  $('btnClear').addEventListener('click', function () {
+    $('in').value = ''; $('prefix').value = '';
+    render(); $('in').focus();
+  });
+
+  ['input', 'change'].forEach(function (ev) {
+    ['in', 'dedupe', 'upper', 'trimq', 'prefix', 'mode', 'grp'].forEach(function (id) {
+      $(id).addEventListener(ev, render);
+    });
+  });
+  $('in').addEventListener('paste', function () { setTimeout(render, 0); });
+  render();
+
+  // 自动化测试钩子
+  window.__extract = extractFromError;
+  window.__build = build;
+  window.__rendered = function () { return lastGroups; };
+})();
+</script>
+</body>
+</html>
