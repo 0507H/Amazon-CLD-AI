@@ -311,6 +311,7 @@ function renderSingleTable(){
         <select class="singleTypeSel" data-idx="${idx}">
           <option value="">请选择</option>
           <option value="MAIN" ${img.manualType==='MAIN'?'selected':''}>MAIN</option>
+          <option value="SWCH" ${img.manualType==='SWCH'?'selected':''}>SWCH</option>
           <option value="PT01" ${img.manualType==='PT01'?'selected':''}>PT01</option>
           <option value="PT02" ${img.manualType==='PT02'?'selected':''}>PT02</option>
           <option value="PT03" ${img.manualType==='PT03'?'selected':''}>PT03</option>
@@ -601,6 +602,7 @@ function renderGroups(){
                 <select class="imgTypeSel" data-sku="${g.sku}" data-idx="${idx}">
                   <option value="">请选择</option>
                   <option value="MAIN" ${img.manualType==='MAIN'?'selected':''}>MAIN</option>
+                  <option value="SWCH" ${img.manualType==='SWCH'?'selected':''}>SWCH</option>
                   <option value="PT01" ${img.manualType==='PT01'?'selected':''}>PT01</option>
                   <option value="PT02" ${img.manualType==='PT02'?'selected':''}>PT02</option>
                   <option value="PT03" ${img.manualType==='PT03'?'selected':''}>PT03</option>
