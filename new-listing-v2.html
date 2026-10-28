@@ -99,11 +99,11 @@ td { padding:5px 8px; border-bottom:1px solid #eee; white-space:nowrap; }
   <div class="card">
     <div class="card-head"><div class="title"><span class="num">2</span>上传Amazon分类商品报告（模板）</div></div>
     <div class="card-body">
-      <div class="upload-zone" id="tplZone" onclick="document.getElementById('tplInput').click()">
+      <div class="upload-zone" id="tplZone" style="position:relative;overflow:hidden;">
         <div class="icon">📋</div>
         <p>上传Amazon分类商品报告（.xlsm）</p>
         <div class="hint">空白模板或已填好的母版均可，工具会自动识别表头字段</div>
-        <input type="file" id="tplInput" accept=".xlsm,.xlsx" style="display:none" onchange="if(this.files[0])handleTemplate(this.files[0])">
+        <input type="file" id="tplInput" accept=".xlsm,.xlsx" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;" onchange="if(this.files[0])handleTemplate(this.files[0])">
       </div>
       <div id="tplInfo"></div>
     </div>
@@ -113,11 +113,11 @@ td { padding:5px 8px; border-bottom:1px solid #eee; white-space:nowrap; }
   <div class="card">
     <div class="card-head"><div class="title"><span class="num">3</span>上传填好的文案表</div></div>
     <div class="card-body">
-      <div class="upload-zone" id="dataZone" onclick="document.getElementById('dataInput').click()">
+      <div class="upload-zone" id="dataZone" style="position:relative;overflow:hidden;">
         <div class="icon">📄</div>
         <p>上传填好的文案编写表（.xlsx）</p>
         <div class="hint">使用步骤1下载的模板格式</div>
-        <input type="file" id="dataInput" accept=".xlsx" style="display:none" onchange="if(this.files[0])handleData(this.files[0])">
+        <input type="file" id="dataInput" accept=".xlsx" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;" onchange="if(this.files[0])handleData(this.files[0])">
       </div>
       <div id="dataInfo"></div>
     </div>
@@ -219,13 +219,37 @@ function clearTemplate() {
 // Build column mapping by reading header row 4
 async function buildColMap() {
   const xml = await tplZip.file(tplSheetPath).async('string');
+  // Load shared strings
+  let sharedStrings = [];
+  try {
+    const ssXml = await tplZip.file('xl/sharedStrings.xml').async('string');
+    sharedStrings = [...ssXml.matchAll(/<si>([\s\S]*?)<\/si>/g)].map(m => {
+      const texts = [...m[1].matchAll(/<t[^>]*>([^<]*)<\/t>/g)].map(t => t[1]);
+      return texts.join('');
+    });
+  } catch(e) { /* no shared strings */ }
+
   const row4Match = xml.match(/<row r="4"[^>]*>([\s\S]*?)<\/row>/);
-  if(!row4Match) throw new Error('模板表头行未找到');
-  const cells = [...row4Match[1].matchAll(/<c r="([A-Z]+)4"[^>]*>(?:<is><t>([^<]*)<\/t><\/is>|<v>([^<]*)<\/v>)?<\/c>/g)];
+  if(!row4Match) throw new Error('模板表头行未找到(row4)');
+  const cells = [...row4Match[1].matchAll(/<c r="([A-Z]+)4"([^>]*)>(?:<is><t>([^<]*)<\/t><\/is>|<v>([^<]*)<\/v>)?<\/c>/g)];
   const labels = {};
   cells.forEach(m => {
     const colStr = m[1];
-    const label = (m[2] || m[3] || '').trim();
+    const attrs = m[2] || '';
+    let label = '';
+    if(m[3]) {
+      label = m[3]; // inline string
+    } else if(m[4] !== undefined) {
+      const val = m[4];
+      if(attrs.includes('t="s"')) {
+        // shared string index
+        const idx = parseInt(val);
+        if(!isNaN(idx) && sharedStrings[idx]) label = sharedStrings[idx];
+      } else {
+        label = val;
+      }
+    }
+    label = (label||'').trim();
     if(label) {
       let idx = 0;
       for(let i=0; i<colStr.length; i++) idx = idx*26 + (colStr.charCodeAt(i)-64);
@@ -461,6 +485,33 @@ function downloadResult() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+// ========== Drag & Drop ==========
+(function(){
+  function setupDrop(zoneId, inputId, handler) {
+    const zone = document.getElementById(zoneId);
+    if(!zone) return;
+    ['dragover','dragenter'].forEach(ev => zone.addEventListener(ev, e => {
+      e.preventDefault(); e.stopPropagation();
+      zone.style.borderColor = '#7c3aed';
+      zone.style.background = '#faf5ff';
+    }));
+    ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => {
+      e.preventDefault(); e.stopPropagation();
+      zone.style.borderColor = '';
+      zone.style.background = '';
+    }));
+    zone.addEventListener('drop', e => {
+      const file = e.dataTransfer.files[0];
+      if(file) {
+        document.getElementById(inputId).files = e.dataTransfer.files;
+        handler(file);
+      }
+    });
+  }
+  setupDrop('tplZone', 'tplInput', handleTemplate);
+  setupDrop('dataZone', 'dataInput', handleData);
+})();
 </script>
 </body>
 </html>
